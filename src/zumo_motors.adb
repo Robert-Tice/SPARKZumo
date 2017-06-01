@@ -19,14 +19,6 @@ package body Zumo_Motors is
 
    procedure Init
    is
-      TCCR1A : unsigned_char
-     with Address => System'To_Address (16#80#);
-
-   TCCR1B : unsigned_char
-     with Address => System'To_Address (16#81#);
-
-   ICR1 : Unsigned_Short
-     with Address => System'To_Address (16#86#);
    begin
       Initd := True;
       SetPinMode (Pin  => PWM_L,
@@ -61,8 +53,6 @@ package body Zumo_Motors is
    is
       Rev : Boolean := False;
       Speed : Motor_Speed := Velocity;
-       OCR1B : Unsigned_Short
-     with Address => System'To_Address (16#8A#);
    begin
       if Speed < 0 then
          Rev := True;
@@ -85,8 +75,6 @@ package body Zumo_Motors is
    is
       Rev : Boolean := False;
       Speed : Motor_Speed := Velocity;
-       OCR1A : Unsigned_Short
-     with Address => System'To_Address (16#88#);
    begin
       if Speed < 0 then
          Rev := True;
