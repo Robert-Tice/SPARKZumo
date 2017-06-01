@@ -1,8 +1,7 @@
 project Zumo is
 
    for Source_Dirs use (".", "src");
-   for Object_Dir use "obj";
-   for Target use "c";
+   for Object_Dir use "libraries";
 
    package Ide is
       for Vcs_Kind use "Git";
@@ -17,6 +16,8 @@ project Zumo is
    package Linker is
       for Switches ("ada") use ("-g");
    end Linker;
+
+   for Target use "c";
 
 end Zumo;
 
