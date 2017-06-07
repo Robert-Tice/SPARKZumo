@@ -5,3 +5,4 @@
 # Except this file
 
 !.gitignore
+!library.properties

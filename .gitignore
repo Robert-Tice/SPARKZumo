@@ -1,5 +1,11 @@
 # Object file
-*.o
+*
+.o
+
+
 
 # Ada Library Information
-*.ali
+*
+.ali
+
+
