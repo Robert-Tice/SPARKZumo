@@ -2,6 +2,6 @@ pragma SPARK_Mode;
 
 package Main_Loop is
 
-   procedure Loop_Placeholder;
+   procedure MainLoop;
 
 end Main_Loop;

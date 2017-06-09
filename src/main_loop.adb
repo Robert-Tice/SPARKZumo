@@ -12,7 +12,7 @@ package body Main_Loop is
 
    OnTime : constant := 1000;
 
-   procedure Loop_Placeholder
+   procedure MainLoop
    is
    begin
       Zumo_Pushbutton.WaitForButton;
@@ -22,6 +22,6 @@ package body Main_Loop is
       Sparkduino.SysDelay (Time => OnTime);
       Zumo_Motors.SetSpeed (LeftVelocity  => Stop,
                             RightVelocity => Stop);
-   end Loop_Placeholder;
+   end MainLoop;
 
 end Main_Loop;

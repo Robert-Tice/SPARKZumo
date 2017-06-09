@@ -6,11 +6,15 @@ void sei_wrapper() {
   sei();
 }
 
+void Serial_Print(char* msg) {
+    Serial.print(msg);
+}
+
 void setup() {	
   Serial.begin(9600);
-  main_setup__setup_placeholder();
+  main_setup__setup();
 }
 
 void loop() {
-  main_loop__loop_placeholder();
+  main_loop__mainloop();
 }

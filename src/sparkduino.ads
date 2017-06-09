@@ -39,4 +39,7 @@ package Sparkduino is
    procedure SEI;
    pragma Import (C, SEI, "sei_wrapper");
 
+   procedure Serial_Print (Msg : String);
+   pragma Import (C, Serial_Print, "Serial_Print");
+
 end Sparkduino;
