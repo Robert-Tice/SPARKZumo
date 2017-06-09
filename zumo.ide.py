@@ -40,12 +40,14 @@ class ArduinoWorkflow:
         'logger' : "machine",
 
         # The output of arduino-builder is put here
-        'build_path' : os.path.join(GPS.pwd(), "build"),
+        'build_path' : os.path.join(GPS.pwd(), ".build"),
 
         'build_cmd' : "arduino-builder",
 
         'flash_cmd' : "avrdude"
     }
+
+    __workflow_registry = {}        
 
 
     def __get_conf_paths(self):
@@ -94,7 +96,8 @@ class ArduinoWorkflow:
             "-logger=%s" % self.__consts['logger'],
             "-build-options-file=%s" % self.__conf_files['build_options']['path'],
             "-build-path=%s" % self.__consts['build_path'],
-            "-quiet",
+ #           "-quiet",
+            "-verbose",
             sketch
         ]
 
@@ -175,37 +178,47 @@ class ArduinoWorkflow:
         self.__console_msg("[workflow stopped]", mode="error")
 
 
-    def __do_wf(self, task):
-        """
-        This is the main workflow triggered by the button.
+    def __do_build_all_wf(self, task):
+        totaltasks = 0
+        for key, value in self.__workflow_registry.iteritems():
+            totaltasks += value['tasks']  
 
-        The workflow steps are:
-            1.) Call SPARK-to-C on the application to generate the C files
-            2.) Probe directory for conf files and arduino sketch files
-            3.) Call post_ucg to do the appropriate post processing
-            4.) Call arduino-builder with the get_build_cmd data
-            5.) Call avrdude with the get_flash_cmd data
+   #     self.__console_msg("Task total: %d" % totaltasks)
 
-        :param task: this is the task passed in from task_workflow. This
-            is used to set_progress for the GPS progress bar
-
-
-        """
+        taskcounter = 1
+        for key, value in self.__workflow_registry.iteritems():
+  #          self.__console_msg("Running task: %s" % key)
+            ret = yield value['func'](task, taskcounter, totaltasks)
+            if ret is not 0:
+                return
+            taskcounter += value['tasks']         
 
 
+    def __do_spark_to_c_wf(self, task, start_task_num=1, end_task_num=2):
         ##########################
-        ## Task 1  - SPARK-to-C ##
+        ## Task    - SPARK-to-C ##
         ##########################
         self.__console_msg("Generating C code.")
         builder = promises.TargetWrapper("Build All")
-        task.set_progress(1, 4)
+        task.set_progress(start_task_num, end_task_num)
         r0 = yield builder.wait_on_execute()
         if r0 is not 0:
             self.__error_exit("Failed to generate C code.")
-            return  
+            return
 
+        obj_dir = GPS.Project.root().object_dirs()       
+
+        ##############################
+        ## Task   - post processing ##
+        ##############################
+        self.__console_msg("Post-processing SPARK-to-C output.")
+        self.__post_ucg(obj_dir=obj_dir)
+        task.set_progress(start_task_num + 1, end_task_num)
+
+
+    def __do_arduino_build_wf(self, task, start_task_num=1, end_task_num=2):
         ##########################
-        ## Task 2  - Probe dir  ##
+        ## Task    - Probe dir  ##
         ##########################
 
         sketches = glob.glob('*.ino')
@@ -215,23 +228,12 @@ class ArduinoWorkflow:
         sketch = sketches[0]
         self.__console_msg("Found Arduino sketch %s" % sketch)
 
-        if not self.__get_conf_paths():
-            return 
-        flash_options = self.__read_flashfile()
+        self.__get_conf_paths()
 
-        obj_dir = GPS.Project.root().object_dirs()
-
-        task.set_progress(2, 4) 
-
-        ##############################
-        ## Task 3 - post processing ##
-        ##############################
-        self.__console_msg("Post-processing SPARK-to-C output.")
-        self.__post_ucg(obj_dir=obj_dir)
-        task.set_progress(3, 4)
-
+        task.set_progress(start_task_num, end_task_num) 
+    
         ####################################
-        ## Task 4 - Build Arduino Project ##
+        ## Task   - Build Arduino Project ##
         ####################################
 
         self.__console_msg("Building Arduino project.")
@@ -245,14 +247,36 @@ class ArduinoWorkflow:
         if r1 is not 0:
             self.__error_exit("{} returned an error.".format(self.__get_build_cmd(sketch=sketch)[0]))
             return
-        task.set_progress(4, 4)
+        task.set_progress(start_task_num + 1, end_task_num)
+
+
+    def __do_arduino_flash_wf(self, task, start_task_num=1, end_task_num=2):
+
+        ##########################
+        ## Task    - Probe dir  ##
+        ##########################
+
+        sketches = glob.glob('*.ino')
+        if len(sketches) is not 1:
+            self.__error_exit("Could not find sketch file.")
+            return
+        sketch = sketches[0]
+        self.__console_msg("Found Arduino sketch %s" % sketch)
+
+        if not self.__get_conf_paths():
+            return
+        flash_options = self.__read_flashfile()
+
+        self.__get_conf_paths()
+
+        task.set_progress(start_task_num, end_task_num) 
 
         ###################################
-        ## Task 5 - Flash image to board ##
+        ## Task - Flash image to board ##
         ###################################
 
         self.__console_msg("Flashing image to board.")
-        self.__console_msg(' '.join(self.__get_flash_cmd(flash_options=flash_options, sketch=sketch)))
+ #       self.__console_msg(' '.join(self.__get_flash_cmd(flash_options=flash_options, sketch=sketch)))
         try:
             proc = promises.ProcessWrapper(self.__get_flash_cmd(flash_options=flash_options, sketch=sketch), spawn_console="")
         except:
@@ -266,27 +290,62 @@ class ArduinoWorkflow:
 
         self.__console_msg("Flashing complete.")
 
-
-    def __arduino_process(self):
-        """
-        Callback for the "Arduino Process" button
-
-        Starts workflow
-        """
-        task_workflow("Arduino Build", self.__do_wf)
-
+        task.set_progress(start_task_num + 1, end_task_num) 
 
 
     def __init__(self):
         """
         This is the entry point to the plugin.
         """
+
+        self.__workflow_registry = {
+            'spark_to_c' : {
+                            'func' : self.__do_spark_to_c_wf,
+                            'tasks' : 2
+                            },
+            'arduino_build' : {
+                            'func': self.__do_arduino_build_wf,
+                            'tasks' : 2
+                            },
+            'arduino_flash' : {
+                            'func' : self.__do_arduino_flash_wf,
+                            'tasks' : 2
+                            }
+        }
+
+
+        GPS.Menu.create("/Build/Arduino")
         gps_utils.make_interactive(
-                callback=self.__arduino_process, 
+                callback=lambda: task_workflow("Build all", self.__do_build_all_wf), 
                 category= "Build", 
-                name="Arduino Process", 
-                toolbar='main', 
-                description='Run UCG and build Arduino Project')
+                name="SPARK/Arduino Build All", 
+                toolbar='main',
+                menu='/Build/Arduino/Build All', 
+                description='Run UCG, build Arduino Project, and Flash to Board')
+
+        gps_utils.make_interactive( 
+                callback=lambda: task_workflow("Run SPARK-to-C", self.__do_spark_to_c_wf),
+                category= "Build", 
+                name="Run SPARK-to-C", 
+                toolbar='main',
+                menu='/Build/Arduino/SPARK-to-C',  
+                description='Generate C code and Arduino lib')
+
+        gps_utils.make_interactive(
+                callback=lambda: task_workflow("Arduino Build", self.__do_arduino_build_wf), 
+                category= "Build", 
+                name="Arduino Build", 
+                toolbar='main',
+                menu='/Build/Arduino/Build Arduino Project',  
+                description='Build Arduino Project')
+
+        gps_utils.make_interactive(
+                callback=lambda: task_workflow("Arduino Flash", self.__do_arduino_flash_wf), 
+                category= "Build", 
+                name="Arduino Flash", 
+                toolbar='main',
+                menu='/Build/Arduino/Flash Arduino', 
+                description='Flash Arduino Project to Board')
 
 
 
