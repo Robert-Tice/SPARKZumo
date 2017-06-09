@@ -328,18 +328,18 @@ class ArduinoWorkflow:
         ]
 
 
-        
-        gps_utils.make_interactive(
-                callback=lambda: task_workflow("Build all", self.__do_build_all_wf), 
-                category= "Build", 
-                name="SPARK/Arduino Build All", 
-                toolbar='main',
-                menu='/Build/Arduino/Build All', 
-                description='Run UCG, build Arduino Project, and Flash to Board')
+        if len(self.__workflow_registry) > 1:
+            gps_utils.make_interactive(
+                    callback=lambda: task_workflow("Build all", self.__do_build_all_wf), 
+                    category= "Build", 
+                    name="Build and Flash", 
+                    toolbar='main',
+                    menu='/Build/Arduino/Build All', 
+                    description='Run UCG, Build Arduino Project, and Flash to Board')
 
         for value in self.__workflow_registry:
             gps_utils.make_interactive(
-                callback=lambda: task_workflow(value['func']),
+                callback=lambda x=value: task_workflow(x['name'], x['func']),
                 category="Build",
                 name=value['name'],
                 toolbar='main',
