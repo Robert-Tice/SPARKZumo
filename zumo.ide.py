@@ -1,6 +1,7 @@
 import glob
 import json
 import os
+import re
 import shutil
 
 import GPS
@@ -31,7 +32,9 @@ class ArduinoWorkflow:
     __consts = {
         # after SPARK-to-C completes, the post_ucg function pulls the .c and .h files from
         #   ucg_output and copies them into a compatible Arduino project folder (renames .c to .cpp)
-        'ucg_lib' : os.path.join(GPS.pwd(), "lib"),
+        'ucg_lib' : os.path.join(GPS.pwd(), "lib", "proj"),
+
+        'adalib' : os.path.join(GPS.pwd(), "lib", "adalib"),
 
         # This is the directory where all the conf files for the build process live
         'conf_dir' : os.path.join(GPS.pwd(), "conf"),
@@ -156,15 +159,37 @@ class ArduinoWorkflow:
                     os.remove(os.path.join(self.__consts['ucg_lib'], "src", files))
             if os.path.isdir(self.__consts['build_path']):
                 shutil.rmtree(self.__consts['build_path'])
+            if os.path.isdir(self.__consts['adalib'])
+                shutil.rmtree(self.__consts['adalib'])
 
         if not os.path.isdir(self.__consts['build_path']):
             os.mkdir(self.__consts['build_path'])
+
+        if not os.path.isdir(os.path.join(self.__consts['adalib'], "src")):
+            os.makedirs(os.path.join(self.__consts['adalib']), "src")
 
         for dirs in obj_dir:
             for files in os.listdir(dirs):
                 if files.endswith(tuple(['.c', '.h'])):
                     shutil.move(os.path.join(dirs, files),
                             os.path.join(self.__consts['ucg_lib'], "src", files))
+
+        try:
+            prom = promises.ProcessWrapper('c-gnatls -v');
+        except:
+            self.__error_exit("Could not run c-gnatls -v.")
+            return
+        ret, output = yield proc.wait_until_terminate()
+        if ret is not 0:
+            self.__error_exit("c-gnatls returned unexpected error code.")
+            return
+
+        rtl_adalib = re.search(r'Object Search Path:\n.*<Current_Directory>\n^(.*)', output, re.MULTILINE).group(1).lstrip()
+        for dirs in rtl_adalib:
+            for files in os.listdir(dirs):
+                if files.endswith(tuple(['.c', '.h'])):
+                    shutil.move(os.path.join(dirs, files),
+                            os.path.join(self.__consts['adalib'], "src", files))
 
         if rename:
             for files in glob.iglob(os.path.join(self.__consts['ucg_lib'], "src", '*.c')):
@@ -245,7 +270,7 @@ class ArduinoWorkflow:
         except:
             self.__error_exit("Could not launch Arduino build...")
             return
-        r1, output = yield proc.wait_until_terminate()
+        r1 = yield proc.wait_until_terminate()
         if r1 is not 0:
             self.__error_exit("{} returned an error.".format(self.__get_build_cmd(sketch=sketch)[0]))
             return
