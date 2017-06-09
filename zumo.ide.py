@@ -296,25 +296,37 @@ class ArduinoWorkflow:
     def __init__(self):
         """
         This is the entry point to the plugin.
-        """
 
+        workflow_registry is the list that contains the workflows of the project.
+
+        each workflow gets its own button and menu item.
+
+        There is a build all which will run all workflows in the order specified in the dictionary
+        """
+        GPS.Menu.create("/Build/Arduino")
         self.__workflow_registry = {
             'spark_to_c' : {
+                            'name' : "Run SPARK-to-C",
+                            'description' : 'Generate C code and Arduino lib',
                             'func' : self.__do_spark_to_c_wf,
                             'tasks' : 2
                             },
             'arduino_build' : {
+                            'name' : "Build Arduino Project",
+                            'description' : 'Build Arduino Project',
                             'func': self.__do_arduino_build_wf,
                             'tasks' : 2
                             },
             'arduino_flash' : {
+                            'name' : "Flash Arduino",
+                            'description' : 'Flash Arduino Project to Board',
                             'func' : self.__do_arduino_flash_wf,
                             'tasks' : 2
                             }
         }
 
 
-        GPS.Menu.create("/Build/Arduino")
+        
         gps_utils.make_interactive(
                 callback=lambda: task_workflow("Build all", self.__do_build_all_wf), 
                 category= "Build", 
@@ -323,30 +335,14 @@ class ArduinoWorkflow:
                 menu='/Build/Arduino/Build All', 
                 description='Run UCG, build Arduino Project, and Flash to Board')
 
-        gps_utils.make_interactive( 
-                callback=lambda: task_workflow("Run SPARK-to-C", self.__do_spark_to_c_wf),
-                category= "Build", 
-                name="Run SPARK-to-C", 
+        for key, value in self.__workflow_registry.iteritems():
+            gps_utils.make_interactive(
+                callback=lambda: task_workflow(value['func']),
+                category="Build",
+                name=value['name'],
                 toolbar='main',
-                menu='/Build/Arduino/SPARK-to-C',  
-                description='Generate C code and Arduino lib')
-
-        gps_utils.make_interactive(
-                callback=lambda: task_workflow("Arduino Build", self.__do_arduino_build_wf), 
-                category= "Build", 
-                name="Arduino Build", 
-                toolbar='main',
-                menu='/Build/Arduino/Build Arduino Project',  
-                description='Build Arduino Project')
-
-        gps_utils.make_interactive(
-                callback=lambda: task_workflow("Arduino Flash", self.__do_arduino_flash_wf), 
-                category= "Build", 
-                name="Arduino Flash", 
-                toolbar='main',
-                menu='/Build/Arduino/Flash Arduino', 
-                description='Flash Arduino Project to Board')
-
+                menu='/Build/Arduino/' + value['name'],
+                description=value['description'])
 
 
 def initialize_project_plugin():
