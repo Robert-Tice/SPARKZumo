@@ -47,7 +47,9 @@ class ArduinoWorkflow:
         'flash_cmd' : "avrdude"
     }
 
-    __workflow_registry = {}        
+    # This contains the list of registered workflows and associated action descriptions.
+    #    this is initilized from the __init__
+    __workflow_registry = []        
 
 
     def __get_conf_paths(self):
@@ -180,13 +182,13 @@ class ArduinoWorkflow:
 
     def __do_build_all_wf(self, task):
         totaltasks = 0
-        for key, value in self.__workflow_registry.iteritems():
+        for value in self.__workflow_registry:
             totaltasks += value['tasks']  
 
    #     self.__console_msg("Task total: %d" % totaltasks)
 
         taskcounter = 1
-        for key, value in self.__workflow_registry.iteritems():
+        for value in self.__workflow_registry:
   #          self.__console_msg("Running task: %s" % key)
             ret = yield value['func'](task, taskcounter, totaltasks)
             if ret is not 0:
@@ -301,29 +303,29 @@ class ArduinoWorkflow:
 
         each workflow gets its own button and menu item.
 
-        There is a build all which will run all workflows in the order specified in the dictionary
+        There is a build all which will run all workflows in the order specified in the list
         """
         GPS.Menu.create("/Build/Arduino")
-        self.__workflow_registry = {
-            'spark_to_c' : {
-                            'name' : "Run SPARK-to-C",
-                            'description' : 'Generate C code and Arduino lib',
-                            'func' : self.__do_spark_to_c_wf,
-                            'tasks' : 2
-                            },
-            'arduino_build' : {
-                            'name' : "Build Arduino Project",
-                            'description' : 'Build Arduino Project',
-                            'func': self.__do_arduino_build_wf,
-                            'tasks' : 2
-                            },
-            'arduino_flash' : {
-                            'name' : "Flash Arduino",
-                            'description' : 'Flash Arduino Project to Board',
-                            'func' : self.__do_arduino_flash_wf,
-                            'tasks' : 2
-                            }
-        }
+        self.__workflow_registry = [
+            {
+                'name' : "Run SPARK-to-C",
+                'description' : 'Generate C code and Arduino lib',
+                'func' : self.__do_spark_to_c_wf,
+                'tasks' : 2
+            },
+            {
+                'name' : "Build Arduino Project",
+                'description' : 'Build Arduino Project',
+                'func': self.__do_arduino_build_wf,
+                'tasks' : 2
+            },
+            {
+                'name' : "Flash Arduino",
+                'description' : 'Flash Arduino Project to Board',
+                'func' : self.__do_arduino_flash_wf,
+                'tasks' : 2
+            }
+        ]
 
 
         
@@ -335,7 +337,7 @@ class ArduinoWorkflow:
                 menu='/Build/Arduino/Build All', 
                 description='Run UCG, build Arduino Project, and Flash to Board')
 
-        for key, value in self.__workflow_registry.iteritems():
+        for value in self.__workflow_registry:
             gps_utils.make_interactive(
                 callback=lambda: task_workflow(value['func']),
                 category="Build",
