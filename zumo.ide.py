@@ -3,6 +3,7 @@ import json
 import os
 import re
 import shutil
+import stat
 
 import GPS
 import gps_utils
@@ -10,6 +11,9 @@ import workflows
 import workflows.promises as promises
 from workflows import task_workflow
 
+def del_rw(action, name, exc):
+    os.chmod(name, stat.S_IWRITE)
+    os.remove(name)
 
 
 class ArduinoWorkflow:
@@ -36,6 +40,9 @@ class ArduinoWorkflow:
 
         'adalib' : os.path.join(GPS.pwd(), "lib", "adalib"),
 
+        'adalib_lib_prop_name' : "adalib_library.properties",
+        'arduino_lib_prop_name' : "library.properties",
+
         # This is the directory where all the conf files for the build process live
         'conf_dir' : os.path.join(GPS.pwd(), "conf"),
 
@@ -47,8 +54,12 @@ class ArduinoWorkflow:
 
         'build_cmd' : "arduino-builder",
 
-        'flash_cmd' : "avrdude"
+        'flash_cmd' : "avrdude",
+
+        'gnatls_cmd' : "c-gnatls"
     }
+
+    __rtl_dep_list = []
 
     # This contains the list of registered workflows and associated action descriptions.
     #    this is initilized from the __init__
@@ -132,6 +143,50 @@ class ArduinoWorkflow:
         ]
 
 
+    def __get_gnatls_cmd(self, obj_dir):
+        obj_dir_ext = [os.path.join(s, "*.ali") for s in obj_dir]
+        retval =  [
+            self.__consts['gnatls_cmd'],
+            "-d",
+            "-a",
+            "-s"
+        ]
+        retval.extend(obj_dir_ext)
+        return retval
+
+
+    def __get_runtime_deps(self, obj_dir):
+        self.__console_msg("Generating RTL dependency list.")
+        try:
+            proc = promises.ProcessWrapper(self.__get_gnatls_cmd(obj_dir))
+        except:
+            self.__error_exit("Failed to run cmd for runtime deps")
+            return
+
+        ret, output = yield proc.wait_until_terminate()
+        if ret is not 0:
+            self.__error_exit("Could not get runtime deps.")
+            return
+
+        src_list = [os.path.basename(x.name().lower()) for x in GPS.Project.root().sources()]
+
+        # this fugly line strips all blank lines out of the gnatls output, and removes all duplicates and src_files
+        ada_dep_list = set([re.sub('adainclude', 'adalib', x) for x in (line.strip() for line in output.splitlines()) if x and x not in src_list])
+
+
+        dep_list = set()
+        for line in ada_dep_list:
+            fpath, fn_wext = os.path.split(line)
+            fn_next = os.path.splitext(fn_wext)[0]
+            cfile = os.path.join(fpath, fn_next + '.c')
+            hfile = os.path.join(fpath, fn_next + '.h')
+            if os.path.isfile(cfile):
+                dep_list.add(cfile)
+            if os.path.isfile(hfile):
+                dep_list.add(hfile)
+        self.__rtl_dep_list = list(dep_list)
+
+
     def __post_ucg(self, obj_dir, clean = True, rename = True):
         """
         This function handles post processing files to convert the SPARK-to-C output into a
@@ -158,15 +213,19 @@ class ArduinoWorkflow:
                 if files.endswith(tuple(['.cpp', '.c', '.h'])):
                     os.remove(os.path.join(self.__consts['ucg_lib'], "src", files))
             if os.path.isdir(self.__consts['build_path']):
-                shutil.rmtree(self.__consts['build_path'])
-            if os.path.isdir(self.__consts['adalib'])
-                shutil.rmtree(self.__consts['adalib'])
+                shutil.rmtree(self.__consts['build_path'], onerror=del_rw)
+            if os.path.isdir(self.__consts['adalib']):
+                shutil.rmtree(self.__consts['adalib'], onerror=del_rw)
 
         if not os.path.isdir(self.__consts['build_path']):
             os.mkdir(self.__consts['build_path'])
 
         if not os.path.isdir(os.path.join(self.__consts['adalib'], "src")):
-            os.makedirs(os.path.join(self.__consts['adalib']), "src")
+            os.makedirs(os.path.join(self.__consts['adalib'], "src"))
+
+        if not os.path.isfile(os.path.join(self.__consts['adalib'], self.__consts['arduino_lib_prop_name'])):
+            shutil.copy2(os.path.join(self.__consts['conf_dir'], self.__consts['adalib_lib_prop_name']),
+                                            os.path.join(self.__consts['adalib'], self.__consts['arduino_lib_prop_name']))
 
         for dirs in obj_dir:
             for files in os.listdir(dirs):
@@ -174,22 +233,14 @@ class ArduinoWorkflow:
                     shutil.move(os.path.join(dirs, files),
                             os.path.join(self.__consts['ucg_lib'], "src", files))
 
-        try:
-            prom = promises.ProcessWrapper('c-gnatls -v');
-        except:
-            self.__error_exit("Could not run c-gnatls -v.")
-            return
-        ret, output = yield proc.wait_until_terminate()
+
+        ret, output = yield self.__get_runtime_deps(obj_dir)
         if ret is not 0:
-            self.__error_exit("c-gnatls returned unexpected error code.")
+            self.__error_exit("Could not get RTL dependencies")
             return
 
-        rtl_adalib = re.search(r'Object Search Path:\n.*<Current_Directory>\n^(.*)', output, re.MULTILINE).group(1).lstrip()
-        for dirs in rtl_adalib:
-            for files in os.listdir(dirs):
-                if files.endswith(tuple(['.c', '.h'])):
-                    shutil.move(os.path.join(dirs, files),
-                            os.path.join(self.__consts['adalib'], "src", files))
+        for files in self.__rtl_dep_list:
+            shutil.copy2(files, os.path.join(self.__consts['adalib'], "src"))
 
         if rename:
             for files in glob.iglob(os.path.join(self.__consts['ucg_lib'], "src", '*.c')):
@@ -210,13 +261,14 @@ class ArduinoWorkflow:
         for value in self.__workflow_registry:
             totaltasks += value['tasks']  
 
-   #     self.__console_msg("Task total: %d" % totaltasks)
+        self.__console_msg("Task total: %d" % totaltasks)
 
         taskcounter = 1
         for value in self.__workflow_registry:
-  #          self.__console_msg("Running task: %s" % key)
-            ret = yield value['func'](task, taskcounter, totaltasks)
+            self.__console_msg("Running task: %s" % value['name'])
+            ret, output = yield value['func'](task, taskcounter, totaltasks)
             if ret is not 0:
+                self.__error_exit("Failed workflow task %s." % value['name'])
                 return
             taskcounter += value['tasks']         
 
@@ -228,8 +280,8 @@ class ArduinoWorkflow:
         self.__console_msg("Generating C code.")
         builder = promises.TargetWrapper("Build All")
         task.set_progress(start_task_num, end_task_num)
-        r0 = yield builder.wait_on_execute()
-        if r0 is not 0:
+        retval = yield builder.wait_on_execute()
+        if retval is not 0:
             self.__error_exit("Failed to generate C code.")
             return
 
@@ -239,7 +291,11 @@ class ArduinoWorkflow:
         ## Task   - post processing ##
         ##############################
         self.__console_msg("Post-processing SPARK-to-C output.")
-        self.__post_ucg(obj_dir=obj_dir)
+        retval, output = yield self.__post_ucg(obj_dir=obj_dir)
+        if retval is not 0:
+            self.__error_exit("Failed to post-process SPARK-to-C output.")
+            return
+
         task.set_progress(start_task_num + 1, end_task_num)
 
 
@@ -270,8 +326,8 @@ class ArduinoWorkflow:
         except:
             self.__error_exit("Could not launch Arduino build...")
             return
-        r1 = yield proc.wait_until_terminate()
-        if r1 is not 0:
+        ret = yield proc.wait_until_terminate()
+        if ret is not 0:
             self.__error_exit("{} returned an error.".format(self.__get_build_cmd(sketch=sketch)[0]))
             return
         task.set_progress(start_task_num + 1, end_task_num)
@@ -310,8 +366,8 @@ class ArduinoWorkflow:
             self.__error_exit("Could not launch avrdude.")
             return
 
-        r2, output = yield proc.wait_until_terminate()
-        if r2 is not 0:
+        ret, output = yield proc.wait_until_terminate()
+        if ret is not 0:
             self.__error_exit("Flash to board failed.")
             return
 

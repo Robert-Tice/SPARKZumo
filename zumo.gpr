@@ -3,6 +3,7 @@ project Zumo is
    for Source_Dirs use (".", "src");
    for Object_Dir use "obj";
    for Languages use ("Ada");
+   for Target use "c";
 
    package Ide is
       for Vcs_Kind use "Git";
@@ -12,8 +13,6 @@ project Zumo is
       for Switches ("sparkduino.ads") use ("-gnatd.5");
       for Switches ("c") use ("--no-complete-output");
    end Compiler;
-
-   for Target use "c";
 
 end Zumo;
 

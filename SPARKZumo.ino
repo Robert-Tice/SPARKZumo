@@ -1,6 +1,6 @@
 #include <main_setup.h>
 #include <main_loop.h>
-
+#include <system.h>
 
 void sei_wrapper() {
   sei();
