@@ -1,20 +1,39 @@
-#include <main_setup.h>
-#include <main_loop.h>
-#include <system.h>
+extern "C" {
+	#include <sparkzumo.h>
+	#include <b__main.h>
 
-void sei_wrapper() {
-  sei();
+	void __gnat_last_chance_handler(void* msg, int line)
+	{
+		Serial.println("Exception occured!");
+		Serial.print("#");
+	    Serial.print(line);
+	    Serial.print(": ");
+	    Serial.println((char*)msg);
+
+	    while(1);
+	}
+
+
+	void sei_wrapper() 
+	{
+	  sei();
+	}
+
+	void Serial_Print(void* msg) 
+	{
+	    Serial.println((char*)msg);
+	}
 }
 
-void Serial_Print(char* msg) {
-    Serial.print(msg);
+
+void setup() 
+{	
+  Serial.begin(115200);
+  Zumomain();
+  sparkzumo__setup();
 }
 
-void setup() {	
-  Serial.begin(9600);
-  main_setup__setup();
-}
-
-void loop() {
-  main_loop__mainloop();
+void loop() 
+{
+  sparkzumo__workloop();
 }

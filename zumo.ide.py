@@ -1,3 +1,4 @@
+import fileinput
 import glob
 import json
 import os
@@ -36,18 +37,13 @@ class ArduinoWorkflow:
     __consts = {
         # after SPARK-to-C completes, the post_ucg function pulls the .c and .h files from
         #   ucg_output and copies them into a compatible Arduino project folder (renames .c to .cpp)
-        'ucg_lib' : os.path.join(GPS.pwd(), "lib", "proj"),
-
-        'adalib' : os.path.join(GPS.pwd(), "lib", "adalib"),
-
-        'adalib_lib_prop_name' : "adalib_library.properties",
-        'arduino_lib_prop_name' : "library.properties",
+        'ucg_lib' : os.path.join(GPS.pwd(), "lib"),
 
         # This is the directory where all the conf files for the build process live
         'conf_dir' : os.path.join(GPS.pwd(), "conf"),
 
         # passed to arduino-builder
-        'logger' : "machine",
+        'logger' : "human",
 
         # The output of arduino-builder is put here
         'build_path' : os.path.join(GPS.pwd(), ".build"),
@@ -56,14 +52,19 @@ class ArduinoWorkflow:
 
         'flash_cmd' : "avrdude",
 
-        'gnatls_cmd' : "c-gnatls"
+        'gnatls_cmd' : "c-gnatls",
+
     }
 
     __rtl_dep_list = []
 
     # This contains the list of registered workflows and associated action descriptions.
     #    this is initilized from the __init__
-    __workflow_registry = []        
+    __workflow_registry = []     
+
+    __arduino_console_timeout = None 
+    __arduino_console_ser_inst = None 
+    __arduino_console_inst = None
 
 
     def __get_conf_paths(self):
@@ -187,7 +188,7 @@ class ArduinoWorkflow:
         self.__rtl_dep_list = list(dep_list)
 
 
-    def __post_ucg(self, obj_dir, clean = True, rename = True):
+    def __post_ucg(self, obj_dir, clean=True, elab_fix=True, rename=False):
         """
         This function handles post processing files to convert the SPARK-to-C output into a
         format that the Arduino build system can understand
@@ -210,28 +211,20 @@ class ArduinoWorkflow:
         if clean:
 
             for files in os.listdir(os.path.join(self.__consts['ucg_lib'], "src")):
-                if files.endswith(tuple(['.cpp', '.c', '.h'])):
+                if files.endswith(tuple(['.cpp', '.c', '.h', '.bak'])):
                     os.remove(os.path.join(self.__consts['ucg_lib'], "src", files))
             if os.path.isdir(self.__consts['build_path']):
                 shutil.rmtree(self.__consts['build_path'], onerror=del_rw)
-            if os.path.isdir(self.__consts['adalib']):
-                shutil.rmtree(self.__consts['adalib'], onerror=del_rw)
 
         if not os.path.isdir(self.__consts['build_path']):
             os.mkdir(self.__consts['build_path'])
 
-        if not os.path.isdir(os.path.join(self.__consts['adalib'], "src")):
-            os.makedirs(os.path.join(self.__consts['adalib'], "src"))
-
-        if not os.path.isfile(os.path.join(self.__consts['adalib'], self.__consts['arduino_lib_prop_name'])):
-            shutil.copy2(os.path.join(self.__consts['conf_dir'], self.__consts['adalib_lib_prop_name']),
-                                            os.path.join(self.__consts['adalib'], self.__consts['arduino_lib_prop_name']))
 
         for dirs in obj_dir:
             for files in os.listdir(dirs):
                 if files.endswith(tuple(['.c', '.h'])):
                     shutil.move(os.path.join(dirs, files),
-                            os.path.join(self.__consts['ucg_lib'], "src", files))
+                            os.path.join(self.__consts['ucg_lib'], "src", files))   
 
 
         ret, output = yield self.__get_runtime_deps(obj_dir)
@@ -240,11 +233,31 @@ class ArduinoWorkflow:
             return
 
         for files in self.__rtl_dep_list:
-            shutil.copy2(files, os.path.join(self.__consts['adalib'], "src"))
+            shutil.copy2(files, os.path.join(self.__consts['ucg_lib'], "src"))
+
+
+        if elab_fix:
+            mains = {
+                'header' : os.path.join(self.__consts['ucg_lib'], "src", "b__main.h"),
+                'impl' : os.path.join(self.__consts['ucg_lib'], "src", "b__main.c")
+            }
+            projname = GPS.Project.root().name()
+
+            if all([os.path.isfile(mains['header']), os.path.isfile(mains['impl'])]):
+                for line in fileinput.input(mains['header'], inplace=True):
+                    print line.replace("extern void main(void);", "extern void " + projname + "main(void);"),
+
+                for line in fileinput.input(mains['impl'], inplace=True):
+                    print line.replace('''void main(void) {''', '''void ''' + projname + '''main(void) {'''),
+
+            r = re.compile(r"(void .*___elabs\(\) {)")
+            for headers in glob.iglob(os.path.join(self.__consts['ucg_lib'], "src", '*.h')):
+                for line in fileinput.input(headers, inplace=True):
+                    print r.sub(r"inline \g<1>", line),
 
         if rename:
             for files in glob.iglob(os.path.join(self.__consts['ucg_lib'], "src", '*.c')):
-                os.rename(files, os.path.splitext(files)[0] + '.cpp')            
+                os.rename(files, os.path.splitext(files)[0] + '.cpp')   
 
 
     def __console_msg(self, msg, mode="text"):
@@ -259,18 +272,20 @@ class ArduinoWorkflow:
     def __do_build_all_wf(self, task):
         totaltasks = 0
         for value in self.__workflow_registry:
-            totaltasks += value['tasks']  
+            if value['all-flag']:
+                totaltasks += value['tasks']  
 
         self.__console_msg("Task total: %d" % totaltasks)
 
         taskcounter = 1
         for value in self.__workflow_registry:
-            self.__console_msg("Running task: %s" % value['name'])
-            ret, output = yield value['func'](task, taskcounter, totaltasks)
-            if ret is not 0:
-                self.__error_exit("Failed workflow task %s." % value['name'])
-                return
-            taskcounter += value['tasks']         
+            if value['all-flag']:
+                self.__console_msg("Running task: %s" % value['name'])
+                ret, output = yield value['func'](task, taskcounter, totaltasks)
+                if ret is not 0:
+                    self.__error_exit("Failed workflow task %s." % value['name'])
+                    return
+                taskcounter += value['tasks']         
 
 
     def __do_spark_to_c_wf(self, task, start_task_num=1, end_task_num=2):
@@ -326,7 +341,7 @@ class ArduinoWorkflow:
         except:
             self.__error_exit("Could not launch Arduino build...")
             return
-        ret = yield proc.wait_until_terminate()
+        ret, output = yield proc.wait_until_terminate()
         if ret is not 0:
             self.__error_exit("{} returned an error.".format(self.__get_build_cmd(sketch=sketch)[0]))
             return
@@ -349,8 +364,6 @@ class ArduinoWorkflow:
         if not self.__get_conf_paths():
             return
         flash_options = self.__read_flashfile()
-
-        self.__get_conf_paths()
 
         task.set_progress(start_task_num, end_task_num) 
 
@@ -376,6 +389,37 @@ class ArduinoWorkflow:
         task.set_progress(start_task_num + 1, end_task_num) 
 
 
+    # def __ardunio_console_callback(self):
+    #     num_waiting = self.__arduino_console_ser_inst.in_waiting()
+    #     if num_waiting > 0:
+    #         x = self.__arduino_console_ser_inst.read(num_waiting)
+    #         self.__arduino_console_inst.write(x.decode("utf-8"))
+
+    # def __arduino_console_destroy(self):
+    #     self.__arduino_console_timeout.remove()
+    #     self.__arduino_console_ser_inst.close()
+    #     self.__arduino_console_ser_inst = None
+    #     self.__arduino_console_timeout = None
+
+
+    # def __do_arduino_console_wf(self, task, start_task_num=1, end_task_num=1):
+    #     self.__console_msg("Opening console connection to Arduino")
+    #     self.__arduino_console_inst = GPS.Console("Arduino Console", on_destroy=self.__arduino_console_destroy)
+
+    #     if not self.__get_conf_paths():
+    #         return
+    #     flash_options = self.__read_flashfile()
+
+    #     try:
+    #         self.__arduino_console_ser_inst = serial.Serial(flash_options['com_port'], int(flash_options['baud_rate']), timeout=0)
+    #     except:
+    #         self.__error_exit("Could not connect to Arduino console.")
+    #         return
+
+    #     self.__arduino_console_timeout = GPS.Timeout(200, self.__ardunio_console_callback)
+
+
+
     def __init__(self):
         """
         This is the entry point to the plugin.
@@ -392,19 +436,22 @@ class ArduinoWorkflow:
                 'name' : "Run SPARK-to-C",
                 'description' : 'Generate C code and Arduino lib',
                 'func' : self.__do_spark_to_c_wf,
-                'tasks' : 2
+                'tasks' : 2,
+                'all-flag' : True
             },
             {
                 'name' : "Build Arduino Project",
                 'description' : 'Build Arduino Project',
                 'func': self.__do_arduino_build_wf,
-                'tasks' : 2
+                'tasks' : 2,
+                'all-flag' : True
             },
             {
                 'name' : "Flash Arduino",
                 'description' : 'Flash Arduino Project to Board',
                 'func' : self.__do_arduino_flash_wf,
-                'tasks' : 2
+                'tasks' : 2,
+                'all-flag' : True
             }
         ]
 
@@ -417,6 +464,14 @@ class ArduinoWorkflow:
                     toolbar='main',
                     menu='/Build/Arduino/Build All', 
                     description='Run UCG, Build Arduino Project, and Flash to Board')
+
+        # gps_utils.make_interactive(
+        #             callback=self.__do_arduino_console_wf, 
+        #             category= "Build", 
+        #             name="Arduino Console", 
+        #             toolbar='main',
+        #             menu='/Build/Arduino/Arduino Console', 
+        #             description='View Arduino Console data')
 
         for value in self.__workflow_registry:
             gps_utils.make_interactive(

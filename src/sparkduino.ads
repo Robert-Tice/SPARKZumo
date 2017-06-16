@@ -1,12 +1,12 @@
 pragma SPARK_Mode;
 
 with Interfaces.C; use Interfaces.C;
+with System; use System;
 
 with Types; use Types;
 
 package Sparkduino is
 
-   F_CPU : constant := 16_000_000;
 
    procedure SetPinMode (Pin  : Unsigned_Char;
                          Mode : Unsigned_Char)
@@ -22,10 +22,12 @@ package Sparkduino is
      with Global => null;
    pragma Import (C, DigitalRead, "digitalRead");
 
-   function Millis return Unsigned_Long;
+   function Millis return Unsigned_Long
+     with Global => null;
    pragma Import (C, Millis, "millis");
 
-   function Micros return Unsigned_Long;
+   function Micros return Unsigned_Long
+     with Global => null;
    pragma Import (C, Micros, "micros");
 
    procedure DelayMicroseconds (Time : unsigned)
@@ -39,6 +41,7 @@ package Sparkduino is
    procedure SEI;
    pragma Import (C, SEI, "sei_wrapper");
 
-   procedure Serial_Print (Msg : String);
+   procedure Serial_Print (Msg : String)
+   with SPARK_Mode => Off;
 
 end Sparkduino;

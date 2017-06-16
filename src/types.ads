@@ -1,8 +1,14 @@
 pragma SPARK_Mode;
 
-
+with Interfaces.C; use Interfaces.C;
 
 package Types is
+
+   type Byte is new Unsigned_Char range 0 .. 255
+     with Size => 8;
+
+   type Word is new Unsigned_Short range 0 .. 65535
+     with Size => 16;
 
    type PinMode is
      (INPUT,
@@ -24,7 +30,7 @@ package Types is
    type Frequency is new Natural range 40 .. 10_000;
    type Volume is new Natural range 0 .. 15
      with Size => 8;
-   type Duration is new Natural range 0 .. 65535;
+   type Duration is new Natural;
 
    type Sensor_Value is new Natural range 0 .. 1000;
    type Sensor_Array is array (1 .. 6) of Sensor_Value;

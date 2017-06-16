@@ -27,7 +27,7 @@ package body Zumo_QTR is
       Initd := True;
    end Init;
 
-   procedure Read_Private (Sensor_Values : in out Sensor_Array)
+   procedure Read_Private (Sensor_Values : out Sensor_Array)
    is
       StartTime : Unsigned_Long;
       ElapsedTime : Unsigned_Long := 0;
@@ -64,7 +64,7 @@ package body Zumo_QTR is
    end Read_Private;
 
 
-   procedure Read_Sensors (Sensor_Values :in out Sensor_Array;
+   procedure Read_Sensors (Sensor_Values : out Sensor_Array;
                            ReadMode      : in Sensor_Read_Mode)
    is
       Off_Values : Sensor_Array;
@@ -180,7 +180,7 @@ package body Zumo_QTR is
       CalMin : Sensor_Value;
       CalMax : Sensor_Value;
       Denom  : Sensor_Value;
-      X      : Integer;
+      X      : Integer := 0;
    begin
       Read_Sensors (Sensor_Values => Sensor_Values,
                     ReadMode      => ReadMode);

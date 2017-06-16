@@ -3,7 +3,7 @@
   "customBuildProperties": "build.warn_data_percentage=75,runtime.tools.avr-gcc.path=C:\\Users\\tice\\AppData\\Local\\Arduino15\\packages\\arduino\\tools\\avr-gcc\\4.9.2-atmel3.5.4-arduino2,runtime.tools.arduinoOTA.path=C:\\Users\\tice\\AppData\\Local\\Arduino15\\packages\\arduino\\tools\\arduinoOTA\\1.1.1,runtime.tools.avrdude.path=C:\\Users\\tice\\AppData\\Local\\Arduino15\\packages\\arduino\\tools\\avrdude\\6.3.0-arduino9",
   "fqbn": "arduino:avr:uno",
   "hardwareFolders": "C:\\Program Files (x86)\\Arduino\\hardware,C:\\Users\\tice\\AppData\\Local\\Arduino15\\packages",
-  "otherLibrariesFolders": "C:\\Users\\tice\\projects\\ada_dev\\SPARKZumo\\lib\\adalib,C:\\Users\\tice\\projects\\ada_dev\\SPARKZumo\\lib\\proj",
+  "otherLibrariesFolders": "C:\\Users\\tice\\projects\\ada_dev\\SPARKZumo\\lib",
   "runtime.ide.version": "10802",
   "sketchLocation": "C:\\Users\\tice\\projects\\ada_dev\\SPARKZumo\\SPARKZumo.ino",
   "toolsFolders": "C:\\Program Files (x86)\\Arduino\\tools-builder,C:\\Program Files (x86)\\Arduino\\hardware\\tools\\avr,C:\\Users\\tice\\AppData\\Local\\Arduino15\\packages"

@@ -19,15 +19,9 @@ package body Zumo_Motors is
 
    procedure Init
    is
-      TCCR1A : Unsigned_Char
-     with Address => System'To_Address (16#80#);
-
-   TCCR1B : Unsigned_Char
-     with Address => System'To_Address (16#81#);
-
-   ICR1 : Unsigned_Short
-     with Address => System'To_Address (16#86#);
    begin
+      pragma Warnings (GNATprove, Off, "unused assignment",
+                       Reason => "Setting mapped registers");
       Initd := True;
       SetPinMode (Pin  => PWM_L,
                   Mode => PinMode'Pos(OUTPUT));
@@ -61,39 +55,41 @@ package body Zumo_Motors is
    is
       Rev : Boolean := False;
       Speed : Motor_Speed := Velocity;
-      OCR1B : Unsigned_Short
-     with Address => System'To_Address (16#8A#);
    begin
+      pragma Warnings (GNATprove, Off, "unused assignment",
+                       Reason => "Setting mapped registers");
+
       if Speed < 0 then
          Rev := True;
          Speed := abs Speed;
       end if;
 
-      OCR1B := Unsigned_Short(Speed);
+      OCR1B := Word(Speed);
 
       if Rev xor FlipLeft then
          DigitalWrite (Pin => DIR_L,
                        Val => DigPinValue'Pos(HIGH));
       else
          DigitalWrite (Pin => DIR_L,
-                       Val => DigPinValue'Pos(LOW));
+                       Val => DigPinValue'Pos (LOW));
       end if;
 
    end SetLeftSpeed;
 
    procedure SetRightSpeed (Velocity : Motor_Speed)
    is
-      Rev : Boolean := False;
+      Rev   : Boolean := False;
       Speed : Motor_Speed := Velocity;
-         OCR1A : Unsigned_Short
-     with Address => System'To_Address (16#88#);
    begin
+      pragma Warnings (GNATprove, Off, "unused assignment",
+                       Reason => "Setting mapped registers");
+
       if Speed < 0 then
          Rev := True;
          Speed := abs Speed;
       end if;
 
-      OCR1A := Unsigned_Short(Speed);
+      OCR1A := Word(Speed);
 
       if Rev xor FlipRight then
          DigitalWrite (Pin => DIR_R,
