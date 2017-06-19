@@ -35,9 +35,9 @@ class ArduinoWorkflow:
     }
 
     __consts = {
-        # after SPARK-to-C completes, the post_ucg function pulls the .c and .h files from
-        #   ucg_output and copies them into a compatible Arduino project folder (renames .c to .cpp)
-        'ucg_lib' : os.path.join(GPS.pwd(), "lib"),
+        # after SPARK-to-C completes, the post_ccg function pulls the .c and .h files from
+        #   ccg_output and copies them into a compatible Arduino project folder (renames .c to .cpp)
+        'ccg_lib' : os.path.join(GPS.pwd(), "lib"),
 
         # This is the directory where all the conf files for the build process live
         'conf_dir' : os.path.join(GPS.pwd(), "conf"),
@@ -188,17 +188,17 @@ class ArduinoWorkflow:
         self.__rtl_dep_list = list(dep_list)
 
 
-    def __post_ucg(self, obj_dir, clean=True, elab_fix=True, rename=False):
+    def __post_ccg(self, obj_dir, clean=True, elab_fix=False, rename=False):
         """
         This function handles post processing files to convert the SPARK-to-C output into a
         format that the Arduino build system can understand
 
         SPARK-to-C dumps .c and .h files into the obj_dir directory. This function copies
-        those files into ucg_lib/src in order to setup an Arduino compatible build directory.
+        those files into ccg_lib/src in order to setup an Arduino compatible build directory.
 
 
         :param clean: this tells the function to clean artifacts from the previous build.
-                    The ucg_lib and build_path directories are cleaned.
+                    The ccg_lib and build_path directories are cleaned.
 
                     Build_path should be cleaned because of a weird Arduino quirk where 
                     iteractive builds are nested. So if you keep building you WILL run into 
@@ -210,21 +210,15 @@ class ArduinoWorkflow:
         """
         if clean:
 
-            for files in os.listdir(os.path.join(self.__consts['ucg_lib'], "src")):
-                if files.endswith(tuple(['.cpp', '.c', '.h', '.bak'])):
-                    os.remove(os.path.join(self.__consts['ucg_lib'], "src", files))
+            for files in os.listdir(os.path.join(self.__consts['ccg_lib'], "src")):
+                if files.endswith(tuple(['.stderr', '.stdout'])):
+                    os.remove(os.path.join(self.__consts['ccg_lib'], "src", files))
+
             if os.path.isdir(self.__consts['build_path']):
                 shutil.rmtree(self.__consts['build_path'], onerror=del_rw)
 
         if not os.path.isdir(self.__consts['build_path']):
             os.mkdir(self.__consts['build_path'])
-
-
-        for dirs in obj_dir:
-            for files in os.listdir(dirs):
-                if files.endswith(tuple(['.c', '.h'])):
-                    shutil.move(os.path.join(dirs, files),
-                            os.path.join(self.__consts['ucg_lib'], "src", files))   
 
 
         ret, output = yield self.__get_runtime_deps(obj_dir)
@@ -233,13 +227,13 @@ class ArduinoWorkflow:
             return
 
         for files in self.__rtl_dep_list:
-            shutil.copy2(files, os.path.join(self.__consts['ucg_lib'], "src"))
+            shutil.copy2(files, os.path.join(self.__consts['ccg_lib'], "src"))
 
 
         if elab_fix:
             mains = {
-                'header' : os.path.join(self.__consts['ucg_lib'], "src", "b__main.h"),
-                'impl' : os.path.join(self.__consts['ucg_lib'], "src", "b__main.c")
+                'header' : os.path.join(self.__consts['ccg_lib'], "src", "b__main.h"),
+                'impl' : os.path.join(self.__consts['ccg_lib'], "src", "b__main.c")
             }
             projname = GPS.Project.root().name()
 
@@ -251,12 +245,12 @@ class ArduinoWorkflow:
                     print line.replace('''void main(void) {''', '''void ''' + projname + '''main(void) {'''),
 
             r = re.compile(r"(void .*___elabs\(\) {)")
-            for headers in glob.iglob(os.path.join(self.__consts['ucg_lib'], "src", '*.h')):
+            for headers in glob.iglob(os.path.join(self.__consts['ccg_lib'], "src", '*.h')):
                 for line in fileinput.input(headers, inplace=True):
                     print r.sub(r"inline \g<1>", line),
 
         if rename:
-            for files in glob.iglob(os.path.join(self.__consts['ucg_lib'], "src", '*.c')):
+            for files in glob.iglob(os.path.join(self.__consts['ccg_lib'], "src", '*.c')):
                 os.rename(files, os.path.splitext(files)[0] + '.cpp')   
 
 
@@ -288,7 +282,7 @@ class ArduinoWorkflow:
                 taskcounter += value['tasks']         
 
 
-    def __do_spark_to_c_wf(self, task, start_task_num=1, end_task_num=2):
+    def __do_ccg_wf(self, task, start_task_num=1, end_task_num=2):
         ##########################
         ## Task    - SPARK-to-C ##
         ##########################
@@ -305,10 +299,10 @@ class ArduinoWorkflow:
         ##############################
         ## Task   - post processing ##
         ##############################
-        self.__console_msg("Post-processing SPARK-to-C output.")
-        retval, output = yield self.__post_ucg(obj_dir=obj_dir)
+        self.__console_msg("Post-processing CCG output.")
+        retval, output = yield self.__post_ccg(obj_dir=obj_dir)
         if retval is not 0:
-            self.__error_exit("Failed to post-process SPARK-to-C output.")
+            self.__error_exit("Failed to post-process CCG output.")
             return
 
         task.set_progress(start_task_num + 1, end_task_num)
@@ -433,9 +427,9 @@ class ArduinoWorkflow:
         GPS.Menu.create("/Build/Arduino")
         self.__workflow_registry = [
             {
-                'name' : "Run SPARK-to-C",
+                'name' : "Generate C Code",
                 'description' : 'Generate C code and Arduino lib',
-                'func' : self.__do_spark_to_c_wf,
+                'func' : self.__do_ccg_wf,
                 'tasks' : 2,
                 'all-flag' : True
             },
@@ -463,7 +457,7 @@ class ArduinoWorkflow:
                     name="Build and Flash", 
                     toolbar='main',
                     menu='/Build/Arduino/Build All', 
-                    description='Run UCG, Build Arduino Project, and Flash to Board')
+                    description='Run ccg, Build Arduino Project, and Flash to Board')
 
         # gps_utils.make_interactive(
         #             callback=self.__do_arduino_console_wf, 

@@ -1,32 +1,39 @@
-project Zumo is
+library project Zumo is
 
-   for Source_Dirs use (".", "src");
-   for Object_Dir use "obj";
+   for Source_Dirs use ("src");
+   for Object_Dir use "lib/src";
+   for Library_Dir use "obj";
    for Languages use ("Ada");
-   for Main use ("main.adb");
-   for Target use "c";
-
-   for Runtime ("Ada") use "spark2c";
+   for Library_Name use "sparkzumo";
+   for Exec_Dir use "obj";
 
    package Ide is
       for Vcs_Kind use "Git";
+      for Artifacts_Dir use "obj";
    end Ide;
 
    package Compiler is
       for Switches ("sparkduino.ads") use ("-gnatd.5");
-      for Switches ("ada") use ("-gnateT=" & project'Project_Dir & "/target.atp");
+      for Switches ("ada") use ("-gnateT=" & project'Project_Dir & "/target.atp",
+                                "-v");
    end Compiler;
 
    package Builder is
       for Global_Compilation_Switches ("ada") use ("-gnateT=" & project'Project_Dir & "/target.atp");
+      for Switches ("ada") use ("-j4",
+                                "-v");
    end Builder;
 
    package Bind is
+      for Switches ("Ada") use ("-v");
    end Bind;
 
    package Prove is
       for Switches use ("-v");
+      for Runtime use "spark2c";
    end Prove;
+
+   for Target use "c";
 
 end Zumo;
 

@@ -1,6 +1,5 @@
 extern "C" {
 	#include <sparkzumo.h>
-	#include <b__main.h>
 
 	void __gnat_last_chance_handler(void* msg, int line)
 	{
