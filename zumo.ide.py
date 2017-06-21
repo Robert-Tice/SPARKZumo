@@ -188,7 +188,7 @@ class ArduinoWorkflow:
         self.__rtl_dep_list = list(dep_list)
 
 
-    def __post_ccg(self, obj_dir, clean=True, elab_fix=False, rename=False):
+    def __post_ccg(self, obj_dir, clean=True):
         """
         This function handles post processing files to convert the SPARK-to-C output into a
         format that the Arduino build system can understand
@@ -204,21 +204,11 @@ class ArduinoWorkflow:
                     iteractive builds are nested. So if you keep building you WILL run into 
                     the max path character limit problem on Windows.
 
-        :param rename: This tells the function to rename .c files to .cpp in order to avoid a weird
-                    compilation conflict with functions that were pragma Import'd
-
         """
         if clean:
-
             for files in os.listdir(os.path.join(self.__consts['ccg_lib'], "src")):
                 if files.endswith(tuple(['.stderr', '.stdout'])):
                     os.remove(os.path.join(self.__consts['ccg_lib'], "src", files))
-
-            if os.path.isdir(self.__consts['build_path']):
-                shutil.rmtree(self.__consts['build_path'], onerror=del_rw)
-
-        if not os.path.isdir(self.__consts['build_path']):
-            os.mkdir(self.__consts['build_path'])
 
 
         ret, output = yield self.__get_runtime_deps(obj_dir)
@@ -230,28 +220,22 @@ class ArduinoWorkflow:
             shutil.copy2(files, os.path.join(self.__consts['ccg_lib'], "src"))
 
 
-        if elab_fix:
-            mains = {
-                'header' : os.path.join(self.__consts['ccg_lib'], "src", "b__main.h"),
-                'impl' : os.path.join(self.__consts['ccg_lib'], "src", "b__main.c")
-            }
-            projname = GPS.Project.root().name()
+    def __pre_arduino_build(self, clean=True):
+        if not self.__get_conf_paths():
+            return None
+        if clean:
+            if os.path.isdir(self.__consts['build_path']):
+                shutil.rmtree(self.__consts['build_path'], onerror=del_rw)
 
-            if all([os.path.isfile(mains['header']), os.path.isfile(mains['impl'])]):
-                for line in fileinput.input(mains['header'], inplace=True):
-                    print line.replace("extern void main(void);", "extern void " + projname + "main(void);"),
+        if not os.path.isdir(self.__consts['build_path']):
+            os.mkdir(self.__consts['build_path'])
 
-                for line in fileinput.input(mains['impl'], inplace=True):
-                    print line.replace('''void main(void) {''', '''void ''' + projname + '''main(void) {'''),
-
-            r = re.compile(r"(void .*___elabs\(\) {)")
-            for headers in glob.iglob(os.path.join(self.__consts['ccg_lib'], "src", '*.h')):
-                for line in fileinput.input(headers, inplace=True):
-                    print r.sub(r"inline \g<1>", line),
-
-        if rename:
-            for files in glob.iglob(os.path.join(self.__consts['ccg_lib'], "src", '*.c')):
-                os.rename(files, os.path.splitext(files)[0] + '.cpp')   
+        sketches = glob.glob('*.ino')
+        if len(sketches) is not 1:
+            self.__error_exit("Could not find sketch file.")
+            return
+        self.__console_msg("Found Arduino sketch %s" % sketches[0])
+        return sketches[0]
 
 
     def __console_msg(self, msg, mode="text"):
@@ -313,14 +297,7 @@ class ArduinoWorkflow:
         ## Task    - Probe dir  ##
         ##########################
 
-        sketches = glob.glob('*.ino')
-        if len(sketches) is not 1:
-            self.__error_exit("Could not find sketch file.")
-            return
-        sketch = sketches[0]
-        self.__console_msg("Found Arduino sketch %s" % sketch)
-
-        self.__get_conf_paths()
+        sketch = self.__pre_arduino_build()
 
         task.set_progress(start_task_num, end_task_num) 
     

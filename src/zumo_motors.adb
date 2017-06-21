@@ -32,9 +32,9 @@ package body Zumo_Motors is
       SetPinMode (Pin  => DIR_R,
                   Mode => PinMode'Pos (OUTPUT));
 
-      TCCR1A := 2#10100000#;
+      TCCR1A := 2#1010_0000#;
 
-      TCCR1B := 2#00010001#;
+      TCCR1B := 2#0001_0001#;
 
       ICR1 := 400;
    end Init;

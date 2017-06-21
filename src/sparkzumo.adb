@@ -2,11 +2,13 @@ pragma SPARK_Mode;
 
 with Sparkduino; use Sparkduino;
 with Zumo_LED;
+with Zumo_LSM303;
 with Zumo_Pushbutton;
 with Zumo_Motors;
 with Zumo_QTR;
 
 with Interfaces.C; use Interfaces.C;
+with Types; use Types;
 
 
 package body SPARKZumo is
@@ -19,13 +21,15 @@ package body SPARKZumo is
    procedure Setup
      with SPARK_Mode => Off
    is
---      StartTime : Unsigned_Long;
+      --      StartTime : Unsigned_Long;
    begin
       Zumo_LED.Init;
       Zumo_Pushbutton.Init;
       Zumo_Motors.Init;
 
       Zumo_QTR.Init;
+
+      Zumo_LSM303.Init;
 
       Zumo_LED.Yellow_Led (On => True);
 --        StartTime := Millis;
@@ -48,15 +52,38 @@ package body SPARKZumo is
 
    procedure WorkLoop
    is
+      Temp : Integer;
+      Mag_Data : Axis_Data;
+      Acc_Data : Axis_Data;
+
+      M_Status, A_Status : Byte;
    begin
       Zumo_Pushbutton.WaitForButton;
       Zumo_LED.Yellow_Led (On => not Zumo_Led.State);
 
-      Zumo_Motors.SetSpeed (LeftVelocity  => Speed,
-                            RightVelocity => Speed);
-      Sparkduino.SysDelay (Time => OnTime);
-      Zumo_Motors.SetSpeed (LeftVelocity  => Stop,
-                            RightVelocity => Stop);
+--        Serial_Print ("Motors Start");
+--        Zumo_Motors.SetSpeed (LeftVelocity  => Speed,
+--                              RightVelocity => Speed);
+--        Sparkduino.SysDelay (Time => OnTime);
+--        Zumo_Motors.SetSpeed (LeftVelocity  => Stop,
+--                              RightVelocity => Stop);
+--        Serial_Print ("Motors stop");
+      Temp := Zumo_LSM303.Read_Temp;
+--      Serial_Print ("Temp: " & Temp'Img);
+
+
+      M_Status := Zumo_LSM303.Read_M_Status;
+--      Serial_Print ("M Status: " & M_Status'Img);
+
+      A_Status := Zumo_LSM303.Read_A_Status;
+ --     Serial_Print ("A Status: " & A_Status'Img);
+
+      Zumo_LSM303.Read_Mag (Data => Mag_Data);
+      --      Zumo_LSM303.Read_Acc (Data => Acc_Data);
+      Serial_Print (Mag_Data (1)'Img & " " &
+                      Mag_Data (2)'Img & " " &
+                      Mag_Data (3)'Img);
+
    end WorkLoop;
 
 

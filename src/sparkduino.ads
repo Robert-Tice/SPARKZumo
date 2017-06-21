@@ -42,6 +42,7 @@ package Sparkduino is
    pragma Import (C, SEI, "sei_wrapper");
 
    procedure Serial_Print (Msg : String)
-   with SPARK_Mode => Off;
+     with SPARK_Mode => Off;
+
 
 end Sparkduino;

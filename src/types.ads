@@ -4,11 +4,16 @@ with Interfaces.C; use Interfaces.C;
 
 package Types is
 
-   type Byte is new Unsigned_Char range 0 .. 255
+   type Byte is mod 256
      with Size => 8;
 
-   type Word is new Unsigned_Short range 0 .. 65535
+   type Word is mod 65536
      with Size => 16;
+
+   type Byte_Array is array (Positive range <>) of Byte;
+
+   type Axis_Data is array (1 .. 3) of Short;
+
 
    type PinMode is
      (INPUT,

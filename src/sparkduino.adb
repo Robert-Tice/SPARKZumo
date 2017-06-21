@@ -1,6 +1,7 @@
 pragma SPARK_Mode;
 
 with System;
+with Interfaces.C; use Interfaces.C;
 
 package body Sparkduino is
 
@@ -11,8 +12,13 @@ package body Sparkduino is
    procedure Serial_Print (Msg : String)
      with SPARK_Mode => Off
    is
+      Msg_Null : char_array (Size_T (Msg'First) .. Size_T (Msg'Last + 1));
    begin
-      Arduino_Serial_Print (Msg => Msg'Address);
+      for I in Msg'Range loop
+         Msg_Null (Size_T (I)) := Char (Msg (I));
+      end loop;
+      Msg_Null (Msg_Null'Last) := Nul;
+      Arduino_Serial_Print (Msg => Msg_Null'Address);
    end Serial_Print;
 
 
