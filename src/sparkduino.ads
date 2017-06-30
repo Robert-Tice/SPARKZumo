@@ -44,5 +44,13 @@ package Sparkduino is
    procedure Serial_Print (Msg : String)
      with SPARK_Mode => Off;
 
+   procedure Serial_Print_Byte (Msg : String;
+                                Val : Byte)
+     with SPARK_Mode => Off;
+
+   procedure Serial_Print_Short (Msg : String;
+                                 Val : Short)
+     with SPARK_Mode => Off;
+
 
 end Sparkduino;

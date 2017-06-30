@@ -1,18 +1,22 @@
 #include <Wire.h>
 
+
 extern "C" {
 	#include <b__sparkzumo.h>
 	#include <sparkzumo.h>
 
-	void __gnat_last_chance_handler(void* msg, int line)
+	void __gnat_last_chance_handler_impl(void* msg, const char* file, const char* func, int line)
 	{
-		Serial.println("Exception occured!");
-		Serial.print("#");
-	    Serial.print(line);
-	    Serial.print(": ");
-	    Serial.println((char*)msg);
+		Serial.println("Exception(");
+		Serial.print(file);
+		Serial.print(":");
+		Serial.print(func);
+		Serial.print(":");
+		Serial.print(line);
+		Serial.print("): ");
+		Serial.println((char*)msg);
 
-	    while(1);
+		while(1);
 	}
 
 
@@ -23,6 +27,22 @@ extern "C" {
 void Serial_Print(void* msg) 
 { 
 	Serial.println(reinterpret_cast<char*>(msg));
+//	Serial.flush();
+}
+
+void Serial_Print_Byte(void* msg, uint8_t val) 
+{ 
+	Serial.print(reinterpret_cast<char*>(msg));
+	Serial.print(": ");
+	Serial.println(val);
+//	Serial.flush();
+}
+
+void Serial_Print_Short(void* msg, uint16_t val) 
+{ 
+	Serial.print(reinterpret_cast<char*>(msg));
+	Serial.print(": ");
+	Serial.println(val);
 //	Serial.flush();
 }
 
@@ -44,9 +64,6 @@ byte Wire_EndTransmission(uint8_t stop)
 byte Wire_Write_Value(uint8_t val)
 { return Wire.write(val); }
 
-byte Wire_Write_Array(void* arr, size_t length)
-{ return Wire.write(reinterpret_cast<uint8_t*>(arr), length); }
-
 int Wire_Available(void)
 { return Wire.available(); }
 
@@ -59,13 +76,12 @@ void Wire_SetClock(uint32_t freq)
 
 void setup() 
 {	
-  sparkzumoinit();
-
-  Serial.begin(115200);
-  sparkzumo__setup();
+	Serial.begin(115200);		
+	sparkzumoinit();
+	sparkzumo__setup();
 }
 
 void loop() 
 {
-  sparkzumo__workloop();
+	sparkzumo__workloop();
 }

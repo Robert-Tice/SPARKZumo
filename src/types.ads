@@ -10,7 +10,8 @@ package Types is
    type Word is mod 65536
      with Size => 16;
 
-   type Byte_Array is array (Positive range <>) of Byte;
+   type Byte_Array is array (Positive range <>) of Byte
+     with Pack;
 
    type Axis_Data is array (1 .. 3) of Short;
 

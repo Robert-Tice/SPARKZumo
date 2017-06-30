@@ -19,9 +19,8 @@ package body Zumo_LSM303 is
       ID := Wire.Read_Byte (Addr => LM_Addr,
                             Reg  => Regs'Enum_Rep (WHO_AM_I));
       if ID /= LM_ID then
-         Serial_Print ("Read invalid ID: " & ID'Img);
-      else
-         Serial_Print ("Found device ID: " & ID'Img);
+         Serial_Print_Byte (Msg => "Read invalid ID:",
+                            Val => ID);
       end if;
    end Check_WHOAMI;
 
@@ -37,21 +36,28 @@ package body Zumo_LSM303 is
                                   Regs'Enum_Rep (CTRL7), 2#0000_0000#);
       Status     : Wire.Transmission_Status;
       Status_Pos : Integer;
+
+      Index : Integer := Init_Seq'First;
    begin
       Wire.Init_Master;
       Wire.SetClock (Freq => 400_000);
 
       Check_WHOAMI;
 
-      Status := Wire.Write_Bytes (Addr => LM_Addr,
-                                  Data => Init_Seq);
+      while Index <= Init_Seq'Last loop
+         Status := Wire.Write_Byte (Addr => LM_Addr,
+                                    Reg  => Init_Seq (Index),
+                                    Data => Init_Seq (Index + 1));
 
-      Status_Pos := Wire.Transmission_Status'Enum_Rep (Status);
+         Status_Pos := Wire.Transmission_Status'Enum_Rep (Status);
 
-      if Status /= Wire.Success then
-         Serial_Print ("LSM303 Init failed with error: "
-                       & Status_Pos'Img);
-      end if;
+         if Status /= Wire.Success then
+            Serial_Print ("LSM303 Init failed with error: "
+                          & Status_Pos'Img);
+         end if;
+
+         Index := Index + 2;
+      end loop;
    end Init;
 
    function Read_M_Status return Byte
@@ -74,16 +80,20 @@ package body Zumo_LSM303 is
                                                     OUT_Y_L_M,
                                                     OUT_Z_L_M);
       Arr     : Byte_Array (1 .. 2);
-      Val     : Unsigned_16;
    begin
       for I in Reg_Arr'Range loop
          Read_Bytes (Addr => LM_Addr,
                      Reg  => Regs'Enum_Rep (Reg_Arr (I)),
                      Data => Arr);
-         Val := Shift_Left (Value  => Unsigned_16 (Arr (2)),
+         declare
+            Val : Unsigned_16
+              with Address => Data (I)'Address;
+         begin
+
+            Val := Shift_Left (Value  => Unsigned_16 (Arr (2)),
                             Amount => 8);
-         Val := Val or Unsigned_16 (Arr (1));
-         Data (I) := Short (Val);
+            Val := Val or Unsigned_16 (Arr (1));
+         end;
       end loop;
    end Read_Mag;
 
@@ -92,37 +102,36 @@ package body Zumo_LSM303 is
       Reg_Arr : constant array (1 .. 3) of Regs := (OUT_X_L_A,
                                                     OUT_Y_L_A,
                                                     OUT_Z_L_A);
-      Arr     : Byte_Array (1 .. 2);
    begin
       for I in Reg_Arr'Range loop
-         Read_Bytes (Addr => LM_Addr,
-                     Reg  => Regs'Enum_Rep (Reg_Arr (I)),
-                     Data => Arr);
-         Data (I) := Short (Shift_Left (Value  => Unsigned_16 (Arr (2)),
-                                        Amount => 8)
-                            or Unsigned_16 (Arr (1)));
+         declare
+            Arr     : Byte_Array (1 .. 2)
+              with Address => Data (I)'Address;
+         begin
+            Read_Bytes (Addr => LM_Addr,
+                        Reg  => Regs'Enum_Rep (Reg_Arr (I)),
+                        Data => Arr);
+         end;
       end loop;
    end Read_Acc;
 
 
-   function Read_Temp return Integer
+   function Read_Temp return Short
    is
       Arr     : Byte_Array (1 .. 2);
-      Sign    : Integer := 1;
 
       Sign_Bit : constant Byte := 2#0000_1000#;
-      Ret_Val : Integer;
+      Ret_Val  : Short
+        with Address => Arr'Address;
    begin
       Wire.Read_Bytes (Addr => LM_Addr,
                        Reg  => Regs'Enum_Rep (TEMP_OUT_L),
                        Data => Arr);
 
-      Ret_Val := Integer (Shift_Left (Value  => Unsigned_16 (Arr (2)),
-                                      Amount => 8) or
-                            Unsigned_16 (Arr (1)));
-
       if (Arr (Arr'Last) and Sign_Bit) > 0 then
-         Ret_Val := Ret_Val * (-1);
+         Arr (Arr'Last) := Arr (Arr'Last) or 2#1111_0000#;
+      else
+         Arr (Arr'Last) := Arr(Arr'Last) and 2#0000_0111#;
       end if;
 
       return Ret_Val;

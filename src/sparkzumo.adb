@@ -52,37 +52,43 @@ package body SPARKZumo is
 
    procedure WorkLoop
    is
-      Temp : Integer;
+      Temp     : Short;
       Mag_Data : Axis_Data;
       Acc_Data : Axis_Data;
 
       M_Status, A_Status : Byte;
    begin
+
       Zumo_Pushbutton.WaitForButton;
       Zumo_LED.Yellow_Led (On => not Zumo_Led.State);
 
---        Serial_Print ("Motors Start");
---        Zumo_Motors.SetSpeed (LeftVelocity  => Speed,
---                              RightVelocity => Speed);
---        Sparkduino.SysDelay (Time => OnTime);
---        Zumo_Motors.SetSpeed (LeftVelocity  => Stop,
---                              RightVelocity => Stop);
---        Serial_Print ("Motors stop");
+      --        Serial_Print ("Motors Start");
+      --        Zumo_Motors.SetSpeed (LeftVelocity  => Speed,
+      --                              RightVelocity => Speed);
+      --        Sparkduino.SysDelay (Time => OnTime);
+      --        Zumo_Motors.SetSpeed (LeftVelocity  => Stop,
+      --                              RightVelocity => Stop);
+      --        Serial_Print ("Motors stop");
       Temp := Zumo_LSM303.Read_Temp;
---      Serial_Print ("Temp: " & Temp'Img);
-
+      Serial_Print_Short (Msg => "Temp",
+                          Val => Temp);
 
       M_Status := Zumo_LSM303.Read_M_Status;
---      Serial_Print ("M Status: " & M_Status'Img);
-
+      Serial_Print_Byte (Msg => "M Status",
+                           Val => M_Status);
       A_Status := Zumo_LSM303.Read_A_Status;
- --     Serial_Print ("A Status: " & A_Status'Img);
+      Serial_Print_Byte (Msg => "A Status",
+                         Val => A_Status);
 
       Zumo_LSM303.Read_Mag (Data => Mag_Data);
-      --      Zumo_LSM303.Read_Acc (Data => Acc_Data);
-      Serial_Print (Mag_Data (1)'Img & " " &
+      Zumo_LSM303.Read_Acc (Data => Acc_Data);
+      Serial_Print ("Mag: " & Mag_Data (1)'Img & " " &
                       Mag_Data (2)'Img & " " &
                       Mag_Data (3)'Img);
+
+      Serial_Print ("Acc: " & Acc_Data (1)'Img & " " &
+                      Acc_Data (2)'Img & " " &
+                      Acc_Data (3)'Img);
 
    end WorkLoop;
 

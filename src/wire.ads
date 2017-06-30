@@ -39,10 +39,6 @@ package Wire is
                         Data : Byte)
                         return Transmission_Status;
    
-   function Write_Bytes (Addr : Byte;
-                         Data : in Byte_Array)
-                         return Transmission_Status;
-   
 private
                    
    function RequestFrom (Addr  : Byte;
@@ -59,11 +55,6 @@ private
    
    function Write_Value (Val : Byte) return Byte;
    pragma Import (C, Write_Value, "Wire_Write_Value");
-    
-   function Write_Array (Addr   : System.Address;
-                         Length : Integer) 
-                         return Byte;
-   pragma Import (C, Write_Array, "Wire_Write_Array");
    
    function Available return Integer;
    pragma Import (C, Available, "Wire_Available");
