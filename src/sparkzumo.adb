@@ -3,6 +3,7 @@ pragma SPARK_Mode;
 with Sparkduino; use Sparkduino;
 with Zumo_LED;
 with Zumo_LSM303;
+with Zumo_L3gd20h;
 with Zumo_Pushbutton;
 with Zumo_Motors;
 with Zumo_QTR;
@@ -31,6 +32,8 @@ package body SPARKZumo is
 
       Zumo_LSM303.Init;
 
+      Zumo_L3gd20h.Init;
+
       Zumo_LED.Yellow_Led (On => True);
 --        StartTime := Millis;
 --        while (Millis - StartTime < 10000) loop
@@ -52,26 +55,30 @@ package body SPARKZumo is
 
    procedure WorkLoop
    is
-      Temp     : Short;
+      Temp : Short;
       Mag_Data : Axis_Data;
       Acc_Data : Axis_Data;
+      Gyr_Data : Axis_Data;
 
-      M_Status, A_Status : Byte;
+      M_Status, A_Status, G_Status : Byte;
    begin
 
       Zumo_Pushbutton.WaitForButton;
       Zumo_LED.Yellow_Led (On => not Zumo_Led.State);
 
-      --        Serial_Print ("Motors Start");
-      --        Zumo_Motors.SetSpeed (LeftVelocity  => Speed,
-      --                              RightVelocity => Speed);
-      --        Sparkduino.SysDelay (Time => OnTime);
-      --        Zumo_Motors.SetSpeed (LeftVelocity  => Stop,
-      --                              RightVelocity => Stop);
-      --        Serial_Print ("Motors stop");
+
+      Zumo_Motors.SetSpeed (LeftVelocity  => Speed,
+                            RightVelocity => Speed);
+
       Temp := Zumo_LSM303.Read_Temp;
-      Serial_Print_Short (Msg => "Temp",
+      Serial_Print_Short (Msg => "L303 Temp",
                           Val => Temp);
+
+      Temp := Short (Zumo_LSM303.Read_Temp);
+      Serial_Print_Short (Msg => "L3GD Temp",
+                          Val => Temp);
+
+
 
       M_Status := Zumo_LSM303.Read_M_Status;
       Serial_Print_Byte (Msg => "M Status",
@@ -80,15 +87,29 @@ package body SPARKZumo is
       Serial_Print_Byte (Msg => "A Status",
                          Val => A_Status);
 
+      G_Status := Zumo_L3gd20h.Read_Status;
+      Serial_Print_Byte (Msg => "G Status",
+                         Val => G_Status);
+
       Zumo_LSM303.Read_Mag (Data => Mag_Data);
       Zumo_LSM303.Read_Acc (Data => Acc_Data);
-      Serial_Print ("Mag: " & Mag_Data (1)'Img & " " &
-                      Mag_Data (2)'Img & " " &
-                      Mag_Data (3)'Img);
+      Zumo_L3gd20h.Read_Gyro (Data => Gyr_Data);
 
-      Serial_Print ("Acc: " & Acc_Data (1)'Img & " " &
-                      Acc_Data (2)'Img & " " &
-                      Acc_Data (3)'Img);
+      Serial_Print ("Mag: " & Mag_Data (X)'Img & " " &
+                      Mag_Data (Y)'Img & " " &
+                      Mag_Data (Z)'Img);
+
+      Serial_Print ("Acc: " & Acc_Data (X)'Img & " " &
+                      Acc_Data (Y)'Img & " " &
+                      Acc_Data (Z)'Img);
+
+      Serial_Print ("Gyr: " & Gyr_Data (X)'Img & " " &
+                      Gyr_Data (Y)'Img & " " &
+                      Gyr_Data (Z)'Img);
+
+      Sparkduino.SysDelay (Time => OnTime);
+      Zumo_Motors.SetSpeed (LeftVelocity  => Stop,
+                            RightVelocity => Stop);
 
    end WorkLoop;
 

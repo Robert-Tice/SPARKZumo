@@ -18,7 +18,8 @@ package Zumo_QTR is
      Post => Initd;
 
    procedure Read_Sensors (Sensor_Values : out Sensor_Array;
-                           ReadMode      : in Sensor_Read_Mode);
+                           ReadMode      : in Sensor_Read_Mode)
+     with Pre => Initd;
 
    procedure ChangeEmitters (On : Boolean);
 

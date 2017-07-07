@@ -5,6 +5,9 @@ with Interfaces.C; use Interfaces.C;
 
 package Zumo_LSM303 is
 
+   M_Sensitivity : constant := 0.000080;   --  gauss/LSB
+   A_Sensitivity : constant := 0.000061;   --  g/LSB
+
    procedure Init;
 
    function Read_Temp return Short;
@@ -14,6 +17,7 @@ package Zumo_LSM303 is
    procedure Read_Mag (Data : out Axis_Data);
    procedure Read_Acc (Data : out Axis_Data);
 
+private
 
    type Regs is
      (TEMP_OUT_L,

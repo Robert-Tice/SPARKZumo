@@ -13,7 +13,9 @@ package Types is
    type Byte_Array is array (Positive range <>) of Byte
      with Pack;
 
-   type Axis_Data is array (1 .. 3) of Short;
+   type Axises is (X, Y, Z);
+
+   type Axis_Data is array (Axises) of Short;
 
 
    type PinMode is

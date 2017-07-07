@@ -39,9 +39,6 @@ package body Zumo_LSM303 is
 
       Index : Integer := Init_Seq'First;
    begin
-      Wire.Init_Master;
-      Wire.SetClock (Freq => 400_000);
-
       Check_WHOAMI;
 
       while Index <= Init_Seq'Last loop
@@ -58,6 +55,8 @@ package body Zumo_LSM303 is
 
          Index := Index + 2;
       end loop;
+
+
    end Init;
 
    function Read_M_Status return Byte
@@ -108,9 +107,9 @@ package body Zumo_LSM303 is
             Arr     : Byte_Array (1 .. 2)
               with Address => Data (I)'Address;
          begin
-            Read_Bytes (Addr => LM_Addr,
-                        Reg  => Regs'Enum_Rep (Reg_Arr (I)),
-                        Data => Arr);
+            Wire.Read_Bytes (Addr => LM_Addr,
+                             Reg  => Regs'Enum_Rep (Reg_Arr (I)),
+                             Data => Arr);
          end;
       end loop;
    end Read_Acc;
