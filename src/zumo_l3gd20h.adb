@@ -24,11 +24,13 @@ package body Zumo_L3gd20h is
 
    procedure Init
    is
-      Init_Seq   : Byte_Array := (Regs'Enum_Rep (CTRL1), 2#0001_1111#,
+      Init_Seq   : Byte_Array := (Regs'Enum_Rep (CTRL1), 2#1001_1111#,
                                   Regs'Enum_Rep (CTRL2), 2#0000_0000#,
                                   Regs'Enum_Rep (CTRL3), 2#0000_0000#,
                                   Regs'Enum_Rep (CTRL4), 2#0011_0000#,
-                                  Regs'Enum_Rep (CTRL5), 2#0000_0000#);
+                                  Regs'Enum_Rep (CTRL5), 2#0100_0000#,
+                                  Regs'Enum_Rep (FIFO_CTRL), 2#0011_1111#,
+                                  Regs'Enum_Rep (LOW_ODR), 2#0000_0001#);
       Status     : Wire.Transmission_Status;
       Status_Pos : Integer;
 
@@ -70,22 +72,28 @@ package body Zumo_L3gd20h is
                              Reg  => Regs'Enum_Rep (STATUS));
    end Read_Status;
 
-   procedure Read_Gyro (Data : out Axis_Data)
+   procedure Read_Gyro (Data : out Fifo_Axis_Data)
    is
-      Reg_Arr : constant array (1 .. 3) of Regs := (OUT_X_L,
-                                                    OUT_Y_L,
-                                                    OUT_Z_L);
+      Raw_Arr : Byte_Array (1 .. Data'Length * 2)
+        with Address => Data'Address;
    begin
-      for I in Reg_Arr'Range loop
-         declare
-            Arr : Byte_Array (1 .. 2)
-              with Address => Data (I)'Address;
-         begin
-            Wire.Read_Bytes (Addr => Chip_Addr,
-                             Reg  => Regs'Enum_Rep (Reg_Arr (I)),
-                             Data => Arr);
-         end;
-      end loop;
+      Wire.Read_Bytes (Addr => Chip_Addr,
+                       Reg  => Regs'Enum_Rep (OUT_X_L),
+                       Data => Raw_Arr);
    end Read_Gyro;
+
+   function FIFO_Rdy return Boolean
+   is
+      BB : Byte;
+   begin
+      BB := Wire.Read_Byte (Addr => Chip_Addr,
+                            Reg  => Regs'Enum_Rep (FIFO_SRC));
+
+      if BB and 2#1100_0000# then
+         return True;
+      end if;
+
+      return False;
+   end FIFO_Rdy;
 
 end Zumo_L3gd20h;

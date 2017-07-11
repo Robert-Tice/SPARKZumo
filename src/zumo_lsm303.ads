@@ -17,6 +17,8 @@ package Zumo_LSM303 is
    procedure Read_Mag (Data : out Axis_Data);
    procedure Read_Acc (Data : out Axis_Data);
 
+   function Acc_FIFO_Rdy return Boolean;
+
 private
 
    type Regs is

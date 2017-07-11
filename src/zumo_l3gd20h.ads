@@ -12,7 +12,9 @@ package Zumo_L3gd20h is
    function Read_Temp return Signed_Char;
    function Read_Status return Byte;
    
-   procedure Read_Gyro (Data : out Axis_Data);
+   procedure Read_Gyro (Data : out Fifo_Axis_Data);  
+   
+   function FIFO_Rdy return Boolean;
    
    
 private
