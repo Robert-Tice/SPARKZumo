@@ -270,6 +270,10 @@ class ArduinoWorkflow:
         ##########################
         ## Task    - SPARK-to-C ##
         ##########################
+        for files in os.listdir(os.path.join(self.__consts['ccg_lib'], "src")):
+            os.remove(os.path.join(self.__consts['ccg_lib'], "src", files))
+
+
         self.__console_msg("Generating C code.")
         builder = promises.TargetWrapper("Build All")
         task.set_progress(start_task_num, end_task_num)

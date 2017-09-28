@@ -86,25 +86,6 @@ package body Wire is
       end loop;
    end Read_Bytes;
 
-   procedure Read_Burst (Addr : Byte;
-                         Reg : Byte
-                           Data : Byte_Array)
-   is
-   begin
-      Wire.BeginTransmission (Addr => Addr);
-      Bytes_Written := Wire.Write_Value (Val => (Reg or 16#80#));
-      Status := Transmission_Status'Val(Wire.EndTransmission (Stop => True));
-
-      if Status /= Wire.Success or Bytes_Written /= 1 then
-         Serial_Print ("Could not set register for read");
-         Data := (others => Byte'Last);
-         return;
-      end if;
-
-      Bytes_Read := RequestFrom (Addr  => Addr,
-                                 Quant => Data'Length,
-                                 Stop  => True);
-
 
    function Write_Byte (Addr : Byte;
                         Reg  : Byte;

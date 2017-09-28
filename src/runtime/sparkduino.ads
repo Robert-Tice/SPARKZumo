@@ -52,5 +52,25 @@ package Sparkduino is
                                  Val : Short)
      with SPARK_Mode => Off;
 
+   procedure Serial_Print_Float (Msg : String;
+                                 Val : Float)
+     with SPARK_Mode => Off;
+
+   procedure Serial_Print_Calibration (Index : Integer;
+                                       Min   : Sensor_Value;
+                                       Max   : Sensor_Value);
+   pragma Import (C, Serial_Print_Calibration, "Serial_Print_Calibration");
+
+
+   -- analog pin mappings
+   A0 : constant := 14;
+   A1 : constant := 15;
+   A2 : constant := 16;
+   A3 : constant := 17;
+   A4 : constant := 18;
+   A5 : constant := 19;
+   A6 : constant := 20;
+   A7 : constant := 21;
+
 
 end Sparkduino;

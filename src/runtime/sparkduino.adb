@@ -16,6 +16,10 @@ package body Sparkduino is
                                          Val : Short);
    pragma Import (C, Arduino_Serial_Print_Short, "Serial_Print_Short");
 
+   procedure Arduino_Serial_Print_Float (Msg : System.Address;
+                                         Val : Float);
+   pragma Import (C, Arduino_Serial_Print_Float, "Serial_Print_Float");
+
 
    procedure Serial_Print (Msg : String)
      with SPARK_Mode => Off
@@ -56,6 +60,20 @@ package body Sparkduino is
       Arduino_Serial_Print_Short (Msg => Msg_Null'Address,
                                   Val => Val);
    end Serial_Print_Short;
+
+   procedure Serial_Print_Float (Msg : String;
+                                      Val : Float)
+     with SPARK_Mode => OFf
+   is
+      Msg_Null : Char_Array (Size_T (Msg'First) .. Size_T (Msg'Last + 1));
+   begin
+      for I in Msg'Range loop
+         Msg_Null (Size_T (I)) := Char (Msg (I));
+      end loop;
+      Msg_Null (Msg_Null'Last) := Nul;
+      Arduino_Serial_Print_Float (Msg => Msg_Null'Address,
+                                  Val => Val);
+   end Serial_Print_Float;
 
 
 

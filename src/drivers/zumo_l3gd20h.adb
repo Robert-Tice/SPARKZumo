@@ -28,8 +28,7 @@ package body Zumo_L3gd20h is
                                   Regs'Enum_Rep (CTRL2), 2#0000_0000#,
                                   Regs'Enum_Rep (CTRL3), 2#0000_0000#,
                                   Regs'Enum_Rep (CTRL4), 2#0011_0000#,
-                                  Regs'Enum_Rep (CTRL5), 2#0100_0000#,
-                                  Regs'Enum_Rep (FIFO_CTRL), 2#0011_1111#,
+                                  Regs'Enum_Rep (CTRL5), 2#0000_0000#,
                                   Regs'Enum_Rep (LOW_ODR), 2#0000_0001#);
       Status     : Wire.Transmission_Status;
       Status_Pos : Integer;
@@ -72,7 +71,7 @@ package body Zumo_L3gd20h is
                              Reg  => Regs'Enum_Rep (STATUS));
    end Read_Status;
 
-   procedure Read_Gyro (Data : out Fifo_Axis_Data)
+   procedure Read_Gyro (Data : out Axis_Data)
    is
       Raw_Arr : Byte_Array (1 .. Data'Length * 2)
         with Address => Data'Address;
@@ -81,19 +80,5 @@ package body Zumo_L3gd20h is
                        Reg  => Regs'Enum_Rep (OUT_X_L),
                        Data => Raw_Arr);
    end Read_Gyro;
-
-   function FIFO_Rdy return Boolean
-   is
-      BB : Byte;
-   begin
-      BB := Wire.Read_Byte (Addr => Chip_Addr,
-                            Reg  => Regs'Enum_Rep (FIFO_SRC));
-
-      if BB and 2#1100_0000# then
-         return True;
-      end if;
-
-      return False;
-   end FIFO_Rdy;
 
 end Zumo_L3gd20h;

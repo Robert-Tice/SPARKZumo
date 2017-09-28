@@ -1,5 +1,6 @@
 #include <Wire.h>
 
+#define YELLOW_LED  (13)
 
 extern "C" {
 	#include <b__sparkzumo.h>
@@ -16,7 +17,13 @@ extern "C" {
 		Serial.print("): ");
 		Serial.println((char*)msg);
 
-		while(1);
+		pinMode(YELLOW_LED, OUTPUT);
+		while(1) {
+			digitalWrite(YELLOW_LED, HIGH);
+			delay(500);
+			digitalWrite(YELLOW_LED, LOW);
+			delay(500);
+		}
 	}
 
 
@@ -38,12 +45,30 @@ void Serial_Print_Byte(void* msg, uint8_t val)
 //	Serial.flush();
 }
 
-void Serial_Print_Short(void* msg, uint16_t val) 
+void Serial_Print_Short(void* msg, int16_t val) 
 { 
 	Serial.print(reinterpret_cast<char*>(msg));
 	Serial.print(": ");
 	Serial.println(val);
 //	Serial.flush();
+}
+
+void Serial_Print_Float(void* msg, float val) 
+{ 
+	Serial.print(reinterpret_cast<char*>(msg));
+	Serial.print(": ");
+	Serial.println(val);
+//	Serial.flush();
+}
+
+void Serial_Print_Calibration(int i, int min, int max)
+{
+	Serial.print(i);
+	Serial.print(" - ");
+	Serial.print("Max: ");
+	Serial.print(max);
+	Serial.print("  Min: ");
+	Serial.println(min);
 }
 
 void Wire_Begin_Master(void)

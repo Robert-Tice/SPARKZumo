@@ -38,4 +38,6 @@ package Zumo_QTR is
    Cal_Vals_On : Calibration_Array;
    Cal_Vals_Off : Calibration_Array;
 
+   Emitters_State : Boolean := False;
+
 end Zumo_QTR;

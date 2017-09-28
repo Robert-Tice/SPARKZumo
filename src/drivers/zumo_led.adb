@@ -13,7 +13,7 @@ package body Zumo_LED is
    begin
       Initd := True;
       SetPinMode (Pin  => YellowLEDPin,
-                  Mode => PinMode'Pos(OUTPUT));
+                  Mode => PinMode'Pos (OUTPUT));
 
    end Init;
 

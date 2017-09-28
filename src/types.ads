@@ -40,14 +40,23 @@ package Types is
      with Size => 8;
    type Duration is new Natural;
 
-   type Sensor_Value is new Natural range 0 .. 1000;
+   Timeout : constant := 1000;
+
+   type Sensor_Value is new Natural range 0 .. Timeout;
    type Sensor_Array is array (1 .. 6) of Sensor_Value;
+
+   subtype Sensor_Value_Scaled is Float range 0.0 .. 1.0;
+   type Sensor_Scaled_Array is array (1 .. 6) of Sensor_Value_Scaled;
 
    type Sensor_Read_Mode is
      (Emitters_Off,
       Emitters_On,
       Emitters_On_Off);
 
-   type Motor_Speed is new Integer range -400 .. 400;
+   subtype Motor_Speed is Integer range -400 .. 400;
+
+   subtype Degrees is Float;
+
+   type Degree_Axis is array (Axises) of Degrees;
 
 end Types;

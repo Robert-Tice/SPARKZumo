@@ -5,8 +5,8 @@ with Interfaces.C; use Interfaces.C;
 
 package Zumo_LSM303 is
 
-   M_Sensitivity : constant := 0.000080;   --  gauss/LSB
-   A_Sensitivity : constant := 0.000061;   --  g/LSB
+   M_Sensitivity : constant Float := 0.000080;   --  gauss/LSB
+   A_Sensitivity : constant Float := 0.000061;   --  g/LSB
 
    procedure Init;
 
@@ -16,8 +16,6 @@ package Zumo_LSM303 is
 
    procedure Read_Mag (Data : out Axis_Data);
    procedure Read_Acc (Data : out Axis_Data);
-
-   function Acc_FIFO_Rdy return Boolean;
 
 private
 

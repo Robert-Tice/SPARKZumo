@@ -15,50 +15,82 @@ package body Zumo_QTR is
 
    LastValue  : Integer := 0;
 
-   SensorPins : array (1 .. 6) of unsigned_char := (4, 16#A3#, 11, 16#A0#, 16#A2#, 5);
+
+
+   SensorPins : array (1 .. 6) of unsigned_char := (4, A3, 11, A0, A2, 5);
 
    Calibrated_On : Boolean := False;
    Calibrated_Off : Boolean := False;
 
+   Noise_Threshold : constant := Timeout / 20;
+   Line_Threshold : constant := Timeout / 5;
+
+   Capacitor_Charge : constant := 50;
 
    procedure Init
    is
    begin
       Initd := True;
+
+      SetPinMode (Pin  => EmitterPin,
+                  Mode => PinMode'Pos (OUTPUT));
+      DigitalWrite (Pin => EmitterPin,
+                    Val => DigPinValue'Pos (LOW));
    end Init;
 
    procedure Read_Private (Sensor_Values : out Sensor_Array)
    is
       StartTime : Unsigned_Long;
       ElapsedTime : Unsigned_Long := 0;
+
+      Pin_Sense   : array (Sensor_Array'Range) of Boolean := (others => False);
+      All_Complete : Boolean := False;
    begin
+      -- Set I/O line high to charge capacitor node
       for I in Sensor_Values'Range loop
          Sensor_Values (I) := Sensor_Value'Last;
+
          SetPinMode (Pin  => SensorPins (I),
                      Mode => PinMode'Pos (OUTPUT));
          DigitalWrite (Pin => SensorPins (I),
-                       Val => DigPinValue'Pos(HIGH));
+                       Val => DigPinValue'Pos (HIGH));
       end loop;
 
-      DelayMicroseconds (Time => 10);
+      -- delay to wait for charge
+      DelayMicroseconds (Time => Capacitor_Charge);
 
+      -- Set I/O lines back to inputs
       for I in Sensor_Values'Range loop
          SetPinMode (Pin  => SensorPins (I),
-                     Mode => PinMode'Pos(INPUT));
+                     Mode => PinMode'Pos (INPUT));
+
+         -- disable the internal pullup
          DigitalWrite (Pin => SensorPins (I),
                        Val => DigPinValue'Pos(LOW));
       end loop;
 
+      -- measure the time for the voltage to decay
       StartTime := Micros;
 
-      while ElapsedTime < Unsigned_Long(Sensor_Value'Last) loop
-         ElapsedTime := Micros - StartTime;
+      while ElapsedTime < Unsigned_Long (Sensor_Value'Last) and not All_Complete loop
+         All_Complete := True;
+
          for I in Sensor_Values'Range loop
-            if DigitalRead (Pin => SensorPins (I)) = DigPinValue'Pos(LOW) and
-              ElapsedTime < Unsigned_Long(Sensor_Values (I)) then
-               Sensor_Values (I) := Sensor_Value(ElapsedTime);
+
+            if not Pin_Sense (I) then
+
+               if DigitalRead (Pin => SensorPins (I)) = DigPinValue'Pos (LOW) then
+                  Sensor_Values (I) := Sensor_Value (ElapsedTime);
+                  Pin_Sense (I) := True;
+               else
+                  All_Complete := False;
+               end if;
             end if;
          end loop;
+
+         DelayMicroseconds (Time => 100);
+         ElapsedTime := Micros - StartTime;
+
       end loop;
 
    end Read_Private;
@@ -82,7 +114,7 @@ package body Zumo_QTR is
       if ReadMode = Emitters_On_Off then
       Read_Private (Sensor_Values => Off_Values);
          for I in Sensor_Values'Range loop
-            Sensor_Values (I) := Sensor_Values (I) + Sensor_Value'Last - Off_Values (I);
+            Sensor_Values (I) := (Sensor_Values (I) + Off_Values (I)) / 2;
          end loop;
       end if;
    end Read_Sensors;
@@ -97,6 +129,8 @@ package body Zumo_QTR is
          DigitalWrite (Pin => EmitterPin,
                        Val => DigPinValue'Pos(LOW));
       end if;
+      Emitters_State := On;
+
       DelayMicroseconds (Time => 200);
    end ChangeEmitters;
 
@@ -105,16 +139,19 @@ package body Zumo_QTR is
    is
       Vals : Sensor_Array;
    begin
-      for I in 1 .. 10 loop
+      for J in 1 .. 10 loop
          Read_Sensors (Sensor_Values => Vals,
                        ReadMode      => ReadMode);
-         if I = 0 or Cal_Vals (I).Max < Vals (I) then
-            Cal_Vals (I).Max := Vals (I);
-         end if;
 
-         if I = 0 or Cal_Vals (I).Min > Vals (I) then
-            Cal_Vals (I).Min := Vals (I);
-         end if;
+         for I in Vals'Range loop
+            if J = 1 or Cal_Vals (I).Max < Vals (I) then
+               Cal_Vals (I).Max := Vals (I);
+            end if;
+
+            if J = 1 or Cal_Vals (I).Min > Vals (I) then
+               Cal_Vals (I).Min := Vals (I);
+            end if;
+         end loop;
       end loop;
 
 
@@ -123,7 +160,7 @@ package body Zumo_QTR is
    procedure Calibrate (ReadMode : Sensor_Read_Mode := Emitters_On)
    is
    begin
-      ResetCalibration (ReadMode => ReadMode);
+--      ResetCalibration (ReadMode => ReadMode);
       case ReadMode is
          when Emitters_On =>
             Calibrate_Private (Cal_Vals => Cal_Vals_On,
@@ -203,12 +240,27 @@ package body Zumo_QTR is
       for I in Sensor_Values'Range loop
          case ReadMode is
             when Emitters_On =>
+               if Sensor_Values (I) > Cal_Vals_On (I).Max then
+                  Cal_Vals_On (I).Max := Sensor_Values (I);
+               end if;
+               if Sensor_Values (I) < Cal_Vals_On (I).Min then
+                  Cal_Vals_On (I).Min := Sensor_Values (I);
+               end if;
+
                CalMax := Cal_Vals_On (I).Max;
                CalMin := Cal_Vals_On (I).Min;
             when Emitters_Off =>
+               if Sensor_Values (I) > Cal_Vals_Off (I).Max then
+                  Cal_Vals_Off (I).Max := Sensor_Values (I);
+               end if;
+               if Sensor_Values (I) < Cal_Vals_Off (I).Min then
+                  Cal_Vals_Off (I).Min := Sensor_Values (I);
+               end if;
+
                CalMax := Cal_Vals_Off (I).Max;
                CalMin := Cal_Vals_Off (I).Min;
             when Emitters_On_Off =>
+               -- TODO: handle case where current sensor value is outside of calibration range
                if Cal_Vals_Off (I).Min < Cal_Vals_On (I).Min then
                   CalMin := Sensor_Value'Last;
                else
@@ -227,16 +279,21 @@ package body Zumo_QTR is
          Denom := CalMax - CalMin;
 
          if Denom /= 0 then
-            X := Integer ((Sensor_Values (I) - CalMin) * 1000 / Denom);
-         end if;
 
-         if X < Integer(Sensor_Value'First) then
-            X := Integer(Sensor_Value'First);
-         elsif X > Integer(Sensor_Value'Last) then
-            X := Integer(Sensor_Value'Last);
-         end if;
+            X := Integer ((Sensor_Values (I) - CalMin) * Sensor_Value'Last / Denom);
 
-         Sensor_Values (I) := Sensor_Value(X);
+            Serial_Print_Short (Msg => "X: ",
+                                Val => Short (X));
+
+            if X < Integer (Sensor_Value'First) then
+               X := Integer (Sensor_Value'First);
+            elsif X > Integer (Sensor_Value'Last) then
+               X := Integer (Sensor_Value'Last);
+            end if;
+
+            Sensor_Values (I) := Sensor_Value (X);
+
+         end if;
       end loop;
    end ReadCalibrated;
 
@@ -256,30 +313,36 @@ package body Zumo_QTR is
       for I in Sensor_Values'Range loop
          Value := Sensor_Values (I);
          if WhiteLine then
-            Value := 1000 - Value;
+            Value := Sensor_Value'Last - Value;
          end if;
 
-         if Value > 200 then
+         -- keep track of whether we see the line at all
+         if Value > Line_Threshold then
             On_Line := True;
          end if;
 
-         if Value > 50 then
-            Avg := Avg + Integer (Value) * (I * 1000);
+         --  only average in values that are above the noise threshold
+         if Value > Noise_Threshold then
+            Avg := Avg + Integer (Value) * (I * Integer (Sensor_Value'Last));
             Sum := Sum + Integer (Value);
          end if;
       end loop;
 
       if not On_Line then
-         if LastValue < ((Sensor_Values'Length - 1) * 1000 / 2) then
+         if LastValue < Integer ((Sensor_Values'Length - 1) * Sensor_Value'Last / 2) then
             Bot_Pos := 0;
             return;
          else
-            Bot_Pos := ((Sensor_Values'Length - 1) * 1000);
+            Bot_Pos := Integer ((Sensor_Values'Length - 1) * Sensor_Value'Last);
             return;
          end if;
       end if;
 
-      LastValue := Avg / Sum;
+      if Sum = 0 then
+         LastValue := 0;
+      else
+         LastValue := Avg / Sum;
+      end if;
 
       Bot_Pos := LastValue;
 

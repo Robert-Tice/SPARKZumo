@@ -26,15 +26,14 @@ package body Zumo_LSM303 is
 
    procedure Init
    is
-      Init_Seq   : Byte_Array := (Regs'Enum_Rep (CTRL0), 2#0100_0000#,
+      Init_Seq   : Byte_Array := (Regs'Enum_Rep (CTRL0), 2#0000_0000#,
                                   Regs'Enum_Rep (CTRL1), 2#0101_0111#, -- 50Hz ODR, En X,Y,Z
                                   Regs'Enum_Rep (CTRL2), 2#0000_0000#,
                                   Regs'Enum_Rep (CTRL3), 2#0000_0000#,
                                   Regs'Enum_Rep (CTRL4), 2#0000_0000#,
                                   Regs'Enum_Rep (CTRL5), 2#1110_0100#, -- Temp EN, High Mag Res, 6.25Hz Mag ODR,
                                   Regs'Enum_Rep (CTRL6), 2#0010_0000#, -- +4 gauss
-                                  Regs'Enum_Rep (CTRL7), 2#0000_0000#,
-                                  Regs'Enum_Rep (FIFO_CTRL), 2#0011_1111#);
+                                  Regs'Enum_Rep (CTRL7), 2#0000_0000#);
       Status     : Wire.Transmission_Status;
       Status_Pos : Integer;
 
@@ -76,7 +75,7 @@ package body Zumo_LSM303 is
 
    procedure Read_Mag (Data : out Axis_Data)
    is
-      Reg_Arr : constant array (1 .. 3) of Regs := (OUT_X_L_M,
+      Reg_Arr : constant array (Axises) of Regs := (OUT_X_L_M,
                                                     OUT_Y_L_M,
                                                     OUT_Z_L_M);
       Arr     : Byte_Array (1 .. 2);
@@ -97,7 +96,7 @@ package body Zumo_LSM303 is
       end loop;
    end Read_Mag;
 
-   procedure Read_Acc (Data : out Fifo_Axis_Data)
+   procedure Read_Acc (Data : out Axis_Data)
    is
       Raw_Arr : Byte_Array (1 .. Data'Length * 2)
         with Address => Data'Address;
@@ -106,20 +105,6 @@ package body Zumo_LSM303 is
                        Reg  => Regs'Enum_Rep (OUT_X_L_A),
                        Data => Raw_Arr);
    end Read_Acc;
-
-   function Acc_FIFO_Rdy return Boolean
-   is
-      BB : Byte;
-   begin
-      BB := Wire.Read_Byte (Addr => LM_Addr,
-                            Reg  => Regs'Enum_Rep (FIFO_SRC));
-
-      if BB and 2#1100_0000# then
-         return True;
-      end if;
-
-      return False;
-   end Acc_FIFO_Rdy;
 
 
    function Read_Temp return Short
