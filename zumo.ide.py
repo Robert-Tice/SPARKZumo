@@ -48,7 +48,7 @@ class ArduinoWorkflow:
         # The output of arduino-builder is put here
         'build_path' : os.path.join(GPS.pwd(), ".build"),
 
-        'build_cmd' : "arduino-builder",
+        'build_cmd' : "/Applications/Arduino.app/Contents/Java/arduino-builder",
 
         'flash_cmd' : "avrdude",
 

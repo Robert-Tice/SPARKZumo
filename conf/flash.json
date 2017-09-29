@@ -1,5 +1,5 @@
 {
-	"com_port": "COM5",
+	"com_port": "/dev/cu.usbmodem2421",
 	"partno": "atmega328p",
 	"baud_rate": "115200"
 }
