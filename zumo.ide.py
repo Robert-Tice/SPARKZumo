@@ -79,6 +79,10 @@ class ArduinoWorkflow:
         for key, value in self.__conf_files.iteritems():
             if value['filename'] in conf_list:
                 value['path'] = os.path.join(self.__consts['conf_dir'], value['filename'])
+            elif "default.%s" % value['filename'] in conf_list:
+                shutil.copyfile(os.path.join(self.__consts['conf_dir'], "default.%s" % value['filename']), 
+                    os.path.join(self.__consts['conf_dir'], value['filename']))
+                value['path'] = os.path.join(self.__consts['conf_dir'], value['filename'])
             else:
                 self.__error_exit("Could not find %s in directory %s" % (value['filename'], self.__consts['conf_dir']))
                 return False 
