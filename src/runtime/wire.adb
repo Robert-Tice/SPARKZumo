@@ -129,4 +129,32 @@ package body Wire is
       return Transmission_Status'Val (EndTransmission (Stop => True));
    end Write_Bytes;
 
+   function RequestFrom (Addr  : Byte;
+                         Quant : Integer;
+                         Stop  : Boolean)
+                         return Byte
+   is
+      CB : Byte := 0;
+   begin
+      if Stop then
+         CB := 1;
+      end if;
+
+      return RequestFrom_C (Addr  => Addr,
+                            Quant => Quant,
+                            Stop  => CB);
+   end RequestFrom;
+
+   function EndTransmission (Stop : Boolean) return Byte
+   is
+      CB : Byte := 0;
+   begin
+      if Stop then
+         CB := 1;
+      end if;
+
+      return EndTransmission_C (Stop => CB);
+   end EndTransmission;
+
+
 end Wire;

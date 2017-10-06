@@ -281,8 +281,11 @@ class ArduinoWorkflow:
         ##########################
         ## Task    - SPARK-to-C ##
         ##########################
-        for files in os.listdir(os.path.join(self.__consts['ccg_lib'], "src")):
-            os.remove(os.path.join(self.__consts['ccg_lib'], "src", files))
+        for file in os.listdir(os.path.join(self.__consts['ccg_lib'], "src")):
+            if os.path.isdir(os.path.join(self.__consts['ccg_lib'], "src", file)):
+                shutil.rmtree(os.path.join(self.__consts['ccg_lib'], "src", file), onerror=del_rw)
+            else:
+                os.remove(os.path.join(self.__consts['ccg_lib'], "src", file))
 
 
         self.__console_msg("Generating C code.")

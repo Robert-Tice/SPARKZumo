@@ -40,18 +40,25 @@ package Wire is
                         return Transmission_Status;
    
 private
-                   
+   
    function RequestFrom (Addr  : Byte;
                          Quant : Integer;
                          Stop  : Boolean)
                          return Byte;
-   pragma Import (C, RequestFrom, "Wire_RequestFrom");
+                   
+   function RequestFrom_C (Addr  : Byte;
+                           Quant : Integer;
+                           Stop  : Byte)
+                           return Byte;
+   pragma Import (C, RequestFrom_C, "Wire_RequestFrom");
    
    procedure BeginTransmission (Addr : Byte);
    pragma Import (C, BeginTransmission, "Wire_BeginTransmission");
    
    function EndTransmission (Stop : Boolean) return Byte;
-   pragma Import (C, EndTransmission, "Wire_EndTransmission");
+   
+   function EndTransmission_C (Stop : Byte) return Byte;
+   pragma Import (C, EndTransmission_C, "Wire_EndTransmission");
    
    function Write_Value (Val : Byte) return Byte;
    pragma Import (C, Write_Value, "Wire_Write_Value");

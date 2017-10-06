@@ -22,35 +22,33 @@ package body SPARKZumo is
 
    ReadMode : constant Sensor_Read_Mode := Emitters_On;
 
-   procedure Print_Cal_Vals (ReadMode : Sensor_Read_Mode)
-   is
-   begin
-      case ReadMode is
-         when Emitters_On =>
-            Serial_Print ("Emitters on");
-            for I in Zumo_QTR.Cal_Vals_On'Range loop
-               Serial_Print_Calibration (Index => I,
-                                         Min   => Zumo_QTR.Cal_Vals_On (I).Min,
-                                         Max   => Zumo_QTR.Cal_Vals_On (I).Max);
-            end loop;
-         when Emitters_Off =>
-            Serial_Print ("Emitters off");
-            for I in Zumo_QTR.Cal_Vals_Off'Range loop
-               Serial_Print_Calibration (Index => I,
-                                         Min   => Zumo_QTR.Cal_Vals_Off (I).Min,
-                                         Max   => Zumo_QTR.Cal_Vals_Off (I).Max);
-            end loop;
-         when Emitters_On_Off =>
-            Print_Cal_Vals (ReadMode => Emitters_On);
-            Print_Cal_Vals (ReadMode => Emitters_Off);
-      end case;
-   end Print_Cal_Vals;
+--     procedure Print_Cal_Vals (ReadMode : Sensor_Read_Mode)
+--     is
+--     begin
+--        case ReadMode is
+--           when Emitters_On =>
+--              Serial_Print ("Emitters on");
+--              for I in Zumo_QTR.Cal_Vals_On'Range loop
+--                 Serial_Print_Calibration (Index => I,
+--                                           Min   => Zumo_QTR.Cal_Vals_On (I).Min,
+--                                           Max   => Zumo_QTR.Cal_Vals_On (I).Max);
+--              end loop;
+--           when Emitters_Off =>
+--              Serial_Print ("Emitters off");
+--              for I in Zumo_QTR.Cal_Vals_Off'Range loop
+--                 Serial_Print_Calibration (Index => I,
+--                                           Min   => Zumo_QTR.Cal_Vals_Off (I).Min,
+--                                           Max   => Zumo_QTR.Cal_Vals_Off (I).Max);
+--              end loop;
+--           when Emitters_On_Off =>
+--              Print_Cal_Vals (ReadMode => Emitters_On);
+--              Print_Cal_Vals (ReadMode => Emitters_Off);
+--        end case;
+--     end Print_Cal_Vals;
 
 
    procedure Setup
-     with SPARK_Mode => Off
    is
-      --      StartTime : Unsigned_Long;
    begin
       Zumo_LED.Init;
       Zumo_Pushbutton.Init;
@@ -83,7 +81,7 @@ package body SPARKZumo is
       Zumo_Motors.SetSpeed (LeftVelocity  => Stop,
                             RightVelocity => Stop);
 
-      Print_Cal_Vals (ReadMode);
+ --     Print_Cal_Vals (ReadMode);
 
 
       Zumo_LED.Yellow_Led (On => True);
@@ -110,13 +108,13 @@ package body SPARKZumo is
 
       Error := Position - Integer (((QTR'Length - 1) * Sensor_Value'Last) / 2);
 
-      Serial_Print_Short (Msg => "Error: ",
-                          Val => Short (Error));
+ --     Serial_Print_Short (Msg => "Error: ",
+ --                         Val => Short (Error));
 
       SpeedDifference := Error / Inv_Prop + Deriv * (Error - LastError);
 
-      Serial_Print_Short (Msg => "Speed Diff: ",
-                          Val => Short (SpeedDifference));
+ --     Serial_Print_Short (Msg => "Speed Diff: ",
+ --                         Val => Short (SpeedDifference));
 
       LastError := Error;
 
@@ -136,19 +134,19 @@ package body SPARKZumo is
                             RightVelocity => RightSpeed);
    end LineFinder;
 
-   procedure PrintQTR
-   is
-      QTR : Sensor_Array;
-   begin
-      Zumo_QTR.ReadCalibrated (Sensor_Values => QTR,
-                               ReadMode      => ReadMode);
-
-      for I in QTR'Range loop
-         Serial_Print_Short (Msg => I'Img & ": ",
-                             Val => Short (QTR (I)));
-      end loop;
-
-   end PrintQTR;
+--     procedure PrintQTR
+--     is
+--        QTR : Sensor_Array;
+--     begin
+--        Zumo_QTR.ReadCalibrated (Sensor_Values => QTR,
+--                                 ReadMode      => ReadMode);
+--
+--        for I in QTR'Range loop
+--           Serial_Print_Short (Msg => I'Img & ": ",
+--                               Val => Short (QTR (I)));
+--        end loop;
+--
+--     end PrintQTR;
 
    procedure WorkLoop
    is
