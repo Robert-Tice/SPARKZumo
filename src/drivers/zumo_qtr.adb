@@ -15,17 +15,15 @@ package body Zumo_QTR is
 
    LastValue  : Integer := 0;
 
-
-
    SensorPins : array (1 .. 6) of unsigned_char := (4, A3, 11, A0, A2, 5);
 
    Calibrated_On : Boolean := False;
    Calibrated_Off : Boolean := False;
 
-   Noise_Threshold : constant := Timeout / 20;
-   Line_Threshold : constant := Timeout / 5;
+   Noise_Threshold : constant := Timeout / 10;
+   Line_Threshold : constant := Timeout / 2;
 
-   Capacitor_Charge : constant := 50;
+   Capacitor_Charge : constant := 5;
 
    procedure Init
    is
@@ -144,11 +142,11 @@ package body Zumo_QTR is
                        ReadMode      => ReadMode);
 
          for I in Vals'Range loop
-            if J = 1 or Cal_Vals (I).Max < Vals (I) then
+            if Cal_Vals (I).Max < Vals (I) then
                Cal_Vals (I).Max := Vals (I);
             end if;
 
-            if J = 1 or Cal_Vals (I).Min > Vals (I) then
+            if Cal_Vals (I).Min > Vals (I) then
                Cal_Vals (I).Min := Vals (I);
             end if;
          end loop;
@@ -280,10 +278,9 @@ package body Zumo_QTR is
 
          if Denom /= 0 then
 
-            X := Integer ((Sensor_Values (I) - CalMin) * Sensor_Value'Last / Denom);
-
-            Serial_Print_Short (Msg => "X: ",
-                                Val => Short (X));
+            X := Integer (
+                          Long (Sensor_Values (I) - CalMin) *
+                            Long (Sensor_Value'Last) / Long (Denom));
 
             if X < Integer (Sensor_Value'First) then
                X := Integer (Sensor_Value'First);
@@ -303,8 +300,8 @@ package body Zumo_QTR is
                        Bot_Pos       : out Natural)
    is
       On_Line : Boolean := False;
-      Avg     : Integer := 0;
-      Sum     : Integer := 0;
+      Avg     : Long := 0;
+      Sum     : Long := 0;
       Value   : Sensor_Value;
    begin
       ReadCalibrated (Sensor_Values => Sensor_Values,
@@ -323,8 +320,8 @@ package body Zumo_QTR is
 
          --  only average in values that are above the noise threshold
          if Value > Noise_Threshold then
-            Avg := Avg + Integer (Value) * (I * Integer (Sensor_Value'Last));
-            Sum := Sum + Integer (Value);
+            Avg := Avg + Long (Value) * (Long (I - 1) * Long (Sensor_Value'Last));
+            Sum := Sum + Long (Value);
          end if;
       end loop;
 
@@ -338,13 +335,9 @@ package body Zumo_QTR is
          end if;
       end if;
 
-      if Sum = 0 then
-         LastValue := 0;
-      else
-         LastValue := Avg / Sum;
-      end if;
+      LastValue := Integer (Avg / Sum);
 
-      Bot_Pos := LastValue;
+      Bot_Pos := Natural (LastValue);
 
    end ReadLine;
 

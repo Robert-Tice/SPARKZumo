@@ -13,14 +13,14 @@ with Types; use Types;
 
 package body SPARKZumo is
 
-   Speed : constant := 400;
+   Default_Speed : constant Motor_Speed := Motor_Speed'Last;
    Stop  : constant := 0;
 
    OnTime : constant := 1000;
 
    LastError : Integer := 0;
 
-   ReadMode : constant Sensor_Read_Mode := Emitters_On_Off;
+   ReadMode : constant Sensor_Read_Mode := Emitters_On;
 
    procedure Print_Cal_Vals (ReadMode : Sensor_Read_Mode)
    is
@@ -66,12 +66,12 @@ package body SPARKZumo is
       for I in 1 .. 240 loop
 
          case I is
-            when 1 | 81 | 161 =>
-               Zumo_Motors.SetSpeed (LeftVelocity  => -100,
-                                     RightVelocity => 100);
-            when 41 | 121 | 201 =>
-               Zumo_Motors.SetSpeed (LeftVelocity  => 100,
-                                     RightVelocity => -100);
+            when 1 | 161 =>
+               Zumo_Motors.SetSpeed (LeftVelocity  => -90,
+                                     RightVelocity => 90);
+            when 81 =>
+               Zumo_Motors.SetSpeed (LeftVelocity  => 90,
+                                     RightVelocity => -90);
             when others =>
                null;
          end case;
@@ -97,30 +97,39 @@ package body SPARKZumo is
 
       Error    : Integer;
 
-      SpeedDifference : Motor_Speed;
+      SpeedDifference : Integer;
 
-      LeftSpeed, RightSpeed : Motor_Speed;
+      LeftSpeed, RightSpeed : Motor_Speed := Default_Speed;
+      Inv_Prop : constant := 8;
+      Deriv : constant := 2;
    begin
       Zumo_QTR.ReadLine (Sensor_Values => QTR,
                          ReadMode      => ReadMode,
-                         WhiteLine     => False,
+                         WhiteLine     => True,
                          Bot_Pos       => Position);
 
-      Serial_Print_Short (Msg => "Position: ",
-                          Val => Short (Position));
+      Error := Position - Integer (((QTR'Length - 1) * Sensor_Value'Last) / 2);
 
-      Error := Position - 2500;
+      Serial_Print_Short (Msg => "Error: ",
+                          Val => Short (Error));
 
-      SpeedDifference := Error / 4 + 6 * (Error - LastError);
+      SpeedDifference := Error / Inv_Prop + Deriv * (Error - LastError);
+
+      Serial_Print_Short (Msg => "Speed Diff: ",
+                          Val => Short (SpeedDifference));
 
       LastError := Error;
 
+      if SpeedDifference > Motor_Speed'Last then
+         SpeedDifference := Default_Speed;
+      elsif SpeedDifference < Motor_Speed'First then
+         SpeedDifference := Default_Speed;
+      end if;
+
       if SpeedDifference < 0 then
-         LeftSpeed := Speed + SpeedDifference;
-         RightSpeed := Speed;
+         LeftSpeed := Default_Speed + Motor_Speed (SpeedDifference);
       else
-         LeftSpeed := Speed;
-         RightSpeed := Speed - SpeedDifference;
+         RightSpeed := Default_Speed - Motor_Speed (SpeedDifference);
       end if;
 
       Zumo_Motors.SetSpeed (LeftVelocity  => LeftSpeed,
@@ -133,6 +142,7 @@ package body SPARKZumo is
    begin
       Zumo_QTR.ReadCalibrated (Sensor_Values => QTR,
                                ReadMode      => ReadMode);
+
       for I in QTR'Range loop
          Serial_Print_Short (Msg => I'Img & ": ",
                              Val => Short (QTR (I)));
@@ -143,10 +153,9 @@ package body SPARKZumo is
    procedure WorkLoop
    is
    begin
-      Zumo_Pushbutton.WaitForButton;
+--      Zumo_Pushbutton.WaitForButton;
 
-      PrintQTR;
---      LineFinder;
+      LineFinder;
 
    end WorkLoop;
 
