@@ -234,10 +234,12 @@ class ArduinoWorkflow:
             return None
         if clean:
             if os.path.isdir(self.__consts['build_path']):
-                shutil.rmtree(self.__consts['build_path'], onerror=del_rw)
-
-        if not os.path.isdir(self.__consts['build_path']):
-            os.mkdir(self.__consts['build_path'])
+                for file in os.listdir(self.__consts['build_path']):
+                    if os.path.isdir(os.path.join(self.__consts['build_path'], file)):
+                        shutil.rmtree(os.path.join(self.__consts['build_path'], file), onerror=del_rw)
+                    else:
+                        if file != ".gitignore":
+                            os.remove(os.path.join(self.__consts['build_path'], file))
 
         sketches = glob.glob('*.ino')
         if len(sketches) is not 1:
