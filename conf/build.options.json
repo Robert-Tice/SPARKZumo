@@ -1,10 +1,10 @@
 {
-  "builtInLibrariesFolders": "/Applications/Arduino.app/Contents/Java/libraries",
-  "customBuildProperties": "build.warn_data_percentage=75,runtime.tools.avr-gcc.path=/Applications/Arduino.app/Contents/Java/hardware/tools/avr,runtime.tools.avrdude.path=/Applications/Arduino.app/Contents/Java/hardware/tools/avr,runtime.tools.arduinoOTA.path=/Applications/Arduino.app/Contents/Java/hardware/tools/avr",
+  "builtInLibrariesFolders": "/home/tice/Documents/arduino-1.8.5/libraries",
+  "customBuildProperties": "build.warn_data_percentage=75,runtime.tools.arduinoOTA.path=/home/tice/Documents/arduino-1.8.5/hardware/tools/avr,runtime.tools.avrdude.path=/home/tice/Documents/arduino-1.8.5/hardware/tools/avr,runtime.tools.avr-gcc.path=/home/tice/Documents/arduino-1.8.5/hardware/tools/avr",
   "fqbn": "arduino:avr:uno",
-  "hardwareFolders": "/Applications/Arduino.app/Contents/Java/hardware",
-  "otherLibrariesFolders": "/Users/transistor/Documents/Arduino/libraries",
-  "runtime.ide.version": "10804",
-  "sketchLocation": "/var/folders/ld/cvsj3blx69v1_sd9_4_3b7sw0000gn/T/untitled471434033.tmp/sketch_sep28a/sketch_sep28a.ino",
-  "toolsFolders": "/Applications/Arduino.app/Contents/Java/tools-builder,/Applications/Arduino.app/Contents/Java/hardware/tools/avr"
+  "hardwareFolders": "/home/tice/Documents/arduino-1.8.5/hardware",
+  "otherLibrariesFolders": "/media/psf/Home/development/projects/ada_dev/SPARKZumo/lib",
+  "runtime.ide.version": "10805",
+  "sketchLocation": "/media/psf/Home/development/projects/ada_dev/SPARKZumo/SPARKZumo.ino",
+  "toolsFolders": "/home/tice/Documents/arduino-1.8.5/tools-builder,/home/tice/Documents/arduino-1.8.5/hardware/tools/avr"
 }

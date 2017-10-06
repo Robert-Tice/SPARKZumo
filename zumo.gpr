@@ -15,7 +15,7 @@ library project Zumo is
 
    package Compiler is
       for Switches ("sparkduino.ads") use ("-gnatd.5");
-      for Switches ("ada") use ("-gnateT=" & project'Project_Dir & "target.atp");
+      for Switches ("ada") use ("-gnateT=/media/psf/Home/development/projects/ada_dev/SPARKZumo/target.atp", "-I`pwd`/src");
    end Compiler;
 
    package Builder is

@@ -48,11 +48,13 @@ class ArduinoWorkflow:
         # The output of arduino-builder is put here
         'build_path' : os.path.join(GPS.pwd(), ".build"),
 
-        'build_cmd' : "/Applications/Arduino.app/Contents/Java/arduino-builder",
+        'build_cmd' : "arduino-builder",
 
         'flash_cmd' : "avrdude",
 
         'gnatls_cmd' : "c-gnatls",
+
+        'fbqn': "arduino:avr:uno",
 
     }
 
@@ -144,28 +146,31 @@ class ArduinoWorkflow:
         ]
 
 
-    def __get_gnatls_cmd(self, obj_dir):
-        obj_dir_ext = [os.path.join(s, "*.ali") for s in obj_dir]
+    def __get_gnatls_cmd(self, dir):
+        alis = []
+        for d in dir:
+            alis.extend(glob.glob(os.path.join(d, "*.ali")))
         retval =  [
             self.__consts['gnatls_cmd'],
             "-d",
             "-a",
             "-s"
         ]
-        retval.extend(obj_dir_ext)
+        retval.extend(alis)
         return retval
 
 
-    def __get_runtime_deps(self, obj_dir):
+    def __get_runtime_deps(self, dir):
         self.__console_msg("Generating RTL dependency list.")
         try:
-            proc = promises.ProcessWrapper(self.__get_gnatls_cmd(obj_dir))
+            proc = promises.ProcessWrapper(self.__get_gnatls_cmd(dir))
         except:
             self.__error_exit("Failed to run cmd for runtime deps")
             return
 
         ret, output = yield proc.wait_until_terminate()
         if ret is not 0:
+            self.__error_exit(output)
             self.__error_exit("Could not get runtime deps.")
             return
 
@@ -282,7 +287,7 @@ class ArduinoWorkflow:
             self.__error_exit("Failed to generate C code.")
             return
 
-        obj_dir = GPS.Project.root().object_dirs()       
+        obj_dir = GPS.Project.root().object_dirs()  
 
         ##############################
         ## Task   - post processing ##
