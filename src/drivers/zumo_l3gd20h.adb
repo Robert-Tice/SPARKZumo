@@ -1,7 +1,6 @@
 pragma SPARK_Mode;
 
 with Wire; use Wire;
-with Sparkduino; use Sparkduino;
 
 package body Zumo_L3gd20h is
 
@@ -14,25 +13,22 @@ package body Zumo_L3gd20h is
       ID : Byte;
    begin
       ID := Wire.Read_Byte (Addr => Chip_Addr,
-                            Reg  => Regs'Enum_Rep (WHO_AM_I));
+                            Reg  => Regs (WHO_AM_I));
 
       if ID /= Chip_ID then
-         Serial_Print_Byte (Msg => "Read invalid ID:",
-                            Val => ID);
+         raise L3GD20H_Exception;
       end if;
    end Check_WHOAMI;
 
    procedure Init
    is
-      Init_Seq   : constant Byte_Array := (Regs'Enum_Rep (CTRL1), 2#1001_1111#,
-                                           Regs'Enum_Rep (CTRL2), 2#0000_0000#,
-                                           Regs'Enum_Rep (CTRL3), 2#0000_0000#,
-                                           Regs'Enum_Rep (CTRL4), 2#0011_0000#,
-                                           Regs'Enum_Rep (CTRL5), 2#0000_0000#,
-                                           Regs'Enum_Rep (LOW_ODR),
-                                           2#0000_0001#);
-      Status     : Wire.Transmission_Status;
-      Status_Pos : Integer;
+      Init_Seq   : constant Byte_Array := (Regs (CTRL1), 2#1001_1111#,
+                                           Regs (CTRL2), 2#0000_0000#,
+                                           Regs (CTRL3), 2#0000_0000#,
+                                           Regs (CTRL4), 2#0011_0000#,
+                                           Regs (CTRL5), 2#0000_0000#,
+                                           Regs (LOW_ODR), 2#0000_0001#);
+      Status     : Wire.Transmission_Status_Index;
 
       Index : Integer := Init_Seq'First;
    begin
@@ -43,11 +39,8 @@ package body Zumo_L3gd20h is
                                     Reg  => Init_Seq (Index),
                                     Data => Init_Seq (Index + 1));
 
-         Status_Pos := Wire.Transmission_Status'Enum_Rep (Status);
-
          if Status /= Wire.Success then
-            Serial_Print ("L3GD20H Init failed with error: "
-                          & Status_Pos'Img);
+            raise L3GD20H_Exception;
          end if;
 
          Index := Index + 2;
@@ -56,12 +49,12 @@ package body Zumo_L3gd20h is
 
    function Read_Temp return signed_char
    is
-      BB : Byte;
+      BB : Byte := 0;
       Ret_Val : signed_char
         with Address => BB'Address;
    begin
       BB := Wire.Read_Byte (Addr => Chip_Addr,
-                            Reg  => Regs'Enum_Rep (OUT_TEMP));
+                            Reg  => Regs (OUT_TEMP));
       return Ret_Val;
    end Read_Temp;
 
@@ -69,7 +62,7 @@ package body Zumo_L3gd20h is
    is
    begin
       return Wire.Read_Byte (Addr => Chip_Addr,
-                             Reg  => Regs'Enum_Rep (STATUS));
+                             Reg  => Regs (STATUS));
    end Read_Status;
 
    procedure Read_Gyro (Data : out Axis_Data)
@@ -78,7 +71,7 @@ package body Zumo_L3gd20h is
         with Address => Data'Address;
    begin
       Wire.Read_Bytes (Addr => Chip_Addr,
-                       Reg  => Regs'Enum_Rep (OUT_X_L),
+                       Reg  => Regs (OUT_X_L),
                        Data => Raw_Arr);
    end Read_Gyro;
 

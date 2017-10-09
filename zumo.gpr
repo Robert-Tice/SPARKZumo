@@ -19,12 +19,11 @@ library project Zumo is
    end Compiler;
 
    package Builder is
-      for Global_Compilation_Switches ("Ada") use ("-gnateT=" & project'Project_Dir & "target.atp");
+ --     for Global_Compilation_Switches ("Ada") use ("-gnateT=" & project'Project_Dir & "target.atp");
    end Builder;
 
    package Prove is
       for Switches use ("-v");
-      for Runtime ("Ada") use "ccg";
    end Prove;
 
 end Zumo;

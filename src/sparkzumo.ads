@@ -1,20 +1,24 @@
 pragma SPARK_Mode;
 
-with Types; use Types;
-
 package SPARKZumo is
 
-   procedure WorkLoop;
-   procedure Setup;
+   Initd : Boolean := False;
+
+   procedure WorkLoop
+     with Pre => Initd;
+
+   procedure Setup
+     with Pre => not Initd,
+     Post => Initd;
 
 private
 
-   procedure ReadLine (Sensor_Values : out Sensor_Array;
-                       ReadMode      : Sensor_Read_Mode;
-                       WhiteLine     : Boolean;
-                       On_Line       : out Boolean;
-                       Bot_Pos       : out Natural);
+   procedure Calibration_Sequence
+     with Global => null,
+     Pre => Initd;
 
-   procedure LineFinder;
+   procedure Inits
+     with Pre => not Initd,
+     Post => Initd;
 
 end SPARKZumo;

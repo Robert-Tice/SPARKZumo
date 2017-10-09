@@ -1,7 +1,6 @@
 pragma SPARK_Mode;
 
 with ATmega328P; use ATmega328P;
-with Interfaces.C; use Interfaces.C;
 with Sparkduino; use Sparkduino;
 
 package body Zumo_Motors is
@@ -17,8 +16,6 @@ package body Zumo_Motors is
    procedure Init
    is
    begin
-      pragma Warnings (GNATprove, Off, "unused assignment",
-                       Reason => "Setting mapped registers");
       Initd := True;
       SetPinMode (Pin  => PWM_L,
                   Mode => PinMode'Pos (OUTPUT));
@@ -53,9 +50,6 @@ package body Zumo_Motors is
       Rev : Boolean := False;
       Speed : Motor_Speed := Velocity;
    begin
-      pragma Warnings (GNATprove, Off, "unused assignment",
-                       Reason => "Setting mapped registers");
-
       if Speed < 0 then
          Rev := True;
          Speed := abs Speed;
@@ -78,9 +72,6 @@ package body Zumo_Motors is
       Rev   : Boolean := False;
       Speed : Motor_Speed := Velocity;
    begin
-      pragma Warnings (GNATprove, Off, "unused assignment",
-                       Reason => "Setting mapped registers");
-
       if Speed < 0 then
          Rev := True;
          Speed := abs Speed;

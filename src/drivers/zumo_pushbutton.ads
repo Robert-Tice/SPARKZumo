@@ -12,12 +12,17 @@ package Zumo_Pushbutton is
      with Pre => Initd;
 
    procedure WaitForButton
-     with Pre => Initd;
+     with Pre => Initd,
+     Global => Initd;
 
 private
 
-   procedure WaitForPress;
+   procedure WaitForPress
+     with Pre => Initd,
+     Global => Initd;
 
-   procedure WaitForRelease;
+   procedure WaitForRelease
+     with Pre => Initd,
+     Global => Initd;
 
 end Zumo_Pushbutton;

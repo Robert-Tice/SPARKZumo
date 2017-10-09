@@ -1,7 +1,7 @@
 pragma SPARK_Mode;
 
 with Wire; use Wire;
-with Sparkduino; use Sparkduino;
+--with Sparkduino; use Sparkduino;
 
 with Interfaces; use Interfaces;
 
@@ -16,27 +16,23 @@ package body Zumo_LSM303 is
       ID : Byte;
    begin
       ID := Wire.Read_Byte (Addr => LM_Addr,
-                            Reg  => Regs'Enum_Rep (WHO_AM_I));
+                            Reg  => Regs (WHO_AM_I));
       if ID /= LM_ID then
-         Serial_Print_Byte (Msg => "Read invalid ID:",
-                            Val => ID);
+         raise LSM303_Exception;
       end if;
    end Check_WHOAMI;
 
    procedure Init
    is
-      Init_Seq   : constant Byte_Array := (Regs'Enum_Rep (CTRL0), 2#0000_0000#,
-                                           Regs'Enum_Rep (CTRL1), 2#0101_0111#,
-                                           Regs'Enum_Rep (CTRL2), 2#0000_0000#,
-                                           Regs'Enum_Rep (CTRL3), 2#0000_0000#,
-                                           Regs'Enum_Rep (CTRL4), 2#0000_0000#,
-                                           Regs'Enum_Rep (CTRL5), 2#1110_0100#,
-                                           Regs'Enum_Rep (CTRL6), 2#0010_0000#,
-                                           Regs'Enum_Rep (CTRL7),
-                                           2#0000_0000#);
-      Status     : Wire.Transmission_Status;
-      Status_Pos : Integer;
-
+      Init_Seq   : constant Byte_Array := (Regs (CTRL0), 2#0000_0000#,
+                                           Regs (CTRL1), 2#0101_0111#,
+                                           Regs (CTRL2), 2#0000_0000#,
+                                           Regs (CTRL3), 2#0000_0000#,
+                                           Regs (CTRL4), 2#0000_0000#,
+                                           Regs (CTRL5), 2#1110_0100#,
+                                           Regs (CTRL6), 2#0010_0000#,
+                                           Regs (CTRL7), 2#0000_0000#);
+      Status     : Wire.Transmission_Status_Index;
       Index : Integer := Init_Seq'First;
    begin
       Check_WHOAMI;
@@ -46,15 +42,14 @@ package body Zumo_LSM303 is
                                     Reg  => Init_Seq (Index),
                                     Data => Init_Seq (Index + 1));
 
-         Status_Pos := Wire.Transmission_Status'Enum_Rep (Status);
-
          if Status /= Wire.Success then
-            Serial_Print ("LSM303 Init failed with error: "
-                          & Status_Pos'Img);
+            raise LSM303_Exception;
          end if;
 
          Index := Index + 2;
       end loop;
+
+      Initd := True;
 
    end Init;
 
@@ -62,26 +57,26 @@ package body Zumo_LSM303 is
    is
    begin
       return Wire.Read_Byte (Addr => LM_Addr,
-                             Reg  => Regs'Enum_Rep (STATUS_M));
+                             Reg  => Regs (STATUS_M));
    end Read_M_Status;
 
    function Read_A_Status return Byte
    is
    begin
       return Wire.Read_Byte (Addr => LM_Addr,
-                             Reg  => Regs'Enum_Rep (STATUS_A));
+                             Reg  => Regs (STATUS_A));
    end Read_A_Status;
 
    procedure Read_Mag (Data : out Axis_Data)
    is
-      Reg_Arr : constant array (Axises) of Regs := (OUT_X_L_M,
-                                                    OUT_Y_L_M,
-                                                    OUT_Z_L_M);
+      Reg_Arr : constant array (Axises) of Reg_Index := (OUT_X_L_M,
+                                                         OUT_Y_L_M,
+                                                         OUT_Z_L_M);
       Arr     : Byte_Array (1 .. 2);
    begin
       for I in Reg_Arr'Range loop
          Read_Bytes (Addr => LM_Addr,
-                     Reg  => Regs'Enum_Rep (Reg_Arr (I)),
+                     Reg  => Regs (Reg_Arr (I)),
                      Data => Arr);
          declare
             Val : Unsigned_16
@@ -101,20 +96,20 @@ package body Zumo_LSM303 is
         with Address => Data'Address;
    begin
       Wire.Read_Bytes (Addr => LM_Addr,
-                       Reg  => Regs'Enum_Rep (OUT_X_L_A),
+                       Reg  => Regs (OUT_X_L_A),
                        Data => Raw_Arr);
    end Read_Acc;
 
    function Read_Temp return short
    is
-      Arr     : Byte_Array (1 .. 2);
+      Arr     : Byte_Array (1 .. 2) := (others => 0);
 
       Sign_Bit : constant Byte := 2#0000_1000#;
       Ret_Val  : short
         with Address => Arr'Address;
    begin
       Wire.Read_Bytes (Addr => LM_Addr,
-                       Reg  => Regs'Enum_Rep (TEMP_OUT_L),
+                       Reg  => Regs (TEMP_OUT_L),
                        Data => Arr);
 
       if (Arr (Arr'Last) and Sign_Bit) > 0 then

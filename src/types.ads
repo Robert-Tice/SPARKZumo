@@ -40,9 +40,14 @@ package Types is
    type Duration is new Natural;
 
    Timeout : constant := 1000;
+   Num_Sensors : constant := 6;
 
    type Sensor_Value is new Natural range 0 .. Timeout;
-   type Sensor_Array is array (1 .. 6) of Sensor_Value;
+   type Sensor_Array is array (1 .. Num_Sensors) of Sensor_Value;
+
+   subtype Robot_Position is Integer range
+     ((Num_Sensors - 1) * Timeout * (-1) / 2) ..
+       ((Num_Sensors - 1) * Timeout / 2);
 
    subtype Sensor_Value_Scaled is Float range 0.0 .. 1.0;
    type Sensor_Scaled_Array is array (1 .. 6) of Sensor_Value_Scaled;

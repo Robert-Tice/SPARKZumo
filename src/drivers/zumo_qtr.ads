@@ -11,6 +11,9 @@ package Zumo_QTR is
 
    type Calibration_Array is array (1 .. 6) of Calibration;
 
+   Cal_Vals_On : Calibration_Array;
+   Cal_Vals_Off : Calibration_Array;
+
    Initd : Boolean := False;
 
    procedure Init
@@ -21,7 +24,8 @@ package Zumo_QTR is
                            ReadMode      : Sensor_Read_Mode)
      with Pre => Initd;
 
-   procedure ChangeEmitters (On : Boolean);
+   procedure ChangeEmitters (On : Boolean)
+     with Global => null;
 
    procedure Calibrate (ReadMode : Sensor_Read_Mode := Emitters_On);
 
@@ -29,11 +33,6 @@ package Zumo_QTR is
 
    procedure ReadCalibrated (Sensor_Values : out Sensor_Array;
                              ReadMode      : Sensor_Read_Mode);
-
-   Cal_Vals_On : Calibration_Array;
-   Cal_Vals_Off : Calibration_Array;
-
-   Emitters_State : Boolean := False;
 
 private
 

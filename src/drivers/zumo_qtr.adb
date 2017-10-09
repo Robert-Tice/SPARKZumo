@@ -119,7 +119,6 @@ package body Zumo_QTR is
          DigitalWrite (Pin => EmitterPin,
                        Val => DigPinValue'Pos (LOW));
       end if;
-      Emitters_State := On;
 
       DelayMicroseconds (Time => 200);
    end ChangeEmitters;
@@ -149,7 +148,6 @@ package body Zumo_QTR is
    procedure Calibrate (ReadMode : Sensor_Read_Mode := Emitters_On)
    is
    begin
---      ResetCalibration (ReadMode => ReadMode);
       case ReadMode is
          when Emitters_On =>
             Calibrate_Private (Cal_Vals => Cal_Vals_On,
@@ -205,7 +203,7 @@ package body Zumo_QTR is
       CalMin : Sensor_Value;
       CalMax : Sensor_Value;
       Denom  : Sensor_Value;
-      X      : Integer := 0;
+      X      : Integer;
    begin
       Read_Sensors (Sensor_Values => Sensor_Values,
                     ReadMode      => ReadMode);

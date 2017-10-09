@@ -1,7 +1,6 @@
 pragma SPARK_Mode;
 
 with Interfaces.C; use Interfaces.C;
-with Sparkduino; use Sparkduino;
 with System;
 
 package body Zumo_Buzzer is
