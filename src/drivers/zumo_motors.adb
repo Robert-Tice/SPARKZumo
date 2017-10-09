@@ -3,7 +3,6 @@ pragma SPARK_Mode;
 with ATmega328P; use ATmega328P;
 with Interfaces.C; use Interfaces.C;
 with Sparkduino; use Sparkduino;
-with System;
 
 package body Zumo_Motors is
 

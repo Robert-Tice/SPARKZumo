@@ -24,12 +24,12 @@ package body Zumo_L3gd20h is
 
    procedure Init
    is
-      Init_Seq   : Byte_Array := (Regs'Enum_Rep (CTRL1), 2#1001_1111#,
-                                  Regs'Enum_Rep (CTRL2), 2#0000_0000#,
-                                  Regs'Enum_Rep (CTRL3), 2#0000_0000#,
-                                  Regs'Enum_Rep (CTRL4), 2#0011_0000#,
-                                  Regs'Enum_Rep (CTRL5), 2#0000_0000#,
-                                  Regs'Enum_Rep (LOW_ODR), 2#0000_0001#);
+      Init_Seq   : constant Byte_Array := (Regs'Enum_Rep (CTRL1), 2#1001_1111#,
+                                           Regs'Enum_Rep (CTRL2), 2#0000_0000#,
+                                           Regs'Enum_Rep (CTRL3), 2#0000_0000#,
+                                           Regs'Enum_Rep (CTRL4), 2#0011_0000#,
+                                           Regs'Enum_Rep (CTRL5), 2#0000_0000#,
+                                           Regs'Enum_Rep (LOW_ODR), 2#0000_0001#);
       Status     : Wire.Transmission_Status;
       Status_Pos : Integer;
 

@@ -1,6 +1,8 @@
 pragma SPARK_Mode;
 
-package SPARKZumo is
+package SPARKZumo
+  with SPARK_Mode
+is
 
    procedure WorkLoop;
    procedure Setup;

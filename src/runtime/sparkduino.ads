@@ -1,7 +1,6 @@
 pragma SPARK_Mode;
 
 with Interfaces.C; use Interfaces.C;
-with System; use System;
 
 with Types; use Types;
 

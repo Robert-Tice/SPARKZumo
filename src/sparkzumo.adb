@@ -1,5 +1,3 @@
-pragma SPARK_Mode;
-
 with Sparkduino; use Sparkduino;
 with Zumo_LED;
 with Zumo_Motion;
@@ -11,43 +9,20 @@ with Interfaces.C; use Interfaces.C;
 with Types; use Types;
 
 
-package body SPARKZumo is
+package body SPARKZumo
+  with SPARK_Mode
+is
 
    Default_Speed : constant Motor_Speed := Motor_Speed'Last;
    Stop  : constant := 0;
-
-   OnTime : constant := 1000;
 
    LastError : Integer := 0;
 
    ReadMode : constant Sensor_Read_Mode := Emitters_On;
 
-   Offline_Offset : Integer := -1;
+   Offline_Offset : Natural := 0;
 
---     procedure Print_Cal_Vals (ReadMode : Sensor_Read_Mode)
---     is
---     begin
---        case ReadMode is
---           when Emitters_On =>
---              Serial_Print ("Emitters on");
---              for I in Zumo_QTR.Cal_Vals_On'Range loop
---                 Serial_Print_Calibration (Index => I,
---                                           Min   => Zumo_QTR.Cal_Vals_On (I).Min,
---                                           Max   => Zumo_QTR.Cal_Vals_On (I).Max);
---              end loop;
---           when Emitters_Off =>
---              Serial_Print ("Emitters off");
---              for I in Zumo_QTR.Cal_Vals_Off'Range loop
---                 Serial_Print_Calibration (Index => I,
---                                           Min   => Zumo_QTR.Cal_Vals_Off (I).Min,
---                                           Max   => Zumo_QTR.Cal_Vals_Off (I).Max);
---              end loop;
---           when Emitters_On_Off =>
---              Print_Cal_Vals (ReadMode => Emitters_On);
---              Print_Cal_Vals (ReadMode => Emitters_Off);
---        end case;
---     end Print_Cal_Vals;
-
+   LastValue      : Integer := 0;
 
    procedure Setup
    is
@@ -63,15 +38,15 @@ package body SPARKZumo is
       Zumo_LED.Yellow_Led (On => True);
       Zumo_Pushbutton.WaitForButton;
       Zumo_LED.Yellow_Led (On => False);
-      for I in 1 .. 240 loop
 
+      for I in 1 .. 240 loop
          case I is
             when 1 | 161 =>
-               Zumo_Motors.SetSpeed (LeftVelocity  => -90,
-                                     RightVelocity => 90);
+               Zumo_Motors.SetSpeed (LeftVelocity  => Motor_Speed'First / 2,
+                                     RightVelocity => Motor_Speed'Last / 2);
             when 81 =>
-               Zumo_Motors.SetSpeed (LeftVelocity  => 90,
-                                     RightVelocity => -90);
+               Zumo_Motors.SetSpeed (LeftVelocity  => Motor_Speed'Last / 2,
+                                     RightVelocity => Motor_Speed'First / 2);
             when others =>
                null;
          end case;
@@ -83,12 +58,62 @@ package body SPARKZumo is
       Zumo_Motors.SetSpeed (LeftVelocity  => Stop,
                             RightVelocity => Stop);
 
- --     Print_Cal_Vals (ReadMode);
-
 
       Zumo_LED.Yellow_Led (On => True);
       Zumo_Pushbutton.WaitForButton;
    end Setup;
+
+   procedure ReadLine (Sensor_Values : out Sensor_Array;
+                       ReadMode      : Sensor_Read_Mode;
+                       WhiteLine     : Boolean;
+                       On_Line       : out Boolean;
+                       Bot_Pos       : out Natural)
+   is
+      Avg     : Long := 0;
+      Sum     : Long := 0;
+      Value   : Sensor_Value;
+
+      Noise_Threshold : constant := Timeout / 10;
+      Line_Threshold : constant := Timeout / 2;
+   begin
+      Zumo_QTR.ReadCalibrated (Sensor_Values => Sensor_Values,
+                               ReadMode      => ReadMode);
+
+      On_Line := False;
+
+      for I in Sensor_Values'Range loop
+         Value := Sensor_Values (I);
+         if WhiteLine then
+            Value := Sensor_Value'Last - Value;
+         end if;
+
+         -- keep track of whether we see the line at all
+         if Value > Line_Threshold then
+            On_Line := True;
+         end if;
+
+         --  only average in values that are above the noise threshold
+         if Value > Noise_Threshold then
+            Avg := Avg + Long (Value) * (Long (I - 1) * Long (Sensor_Value'Last));
+            Sum := Sum + Long (Value);
+         end if;
+      end loop;
+
+      if not On_Line then
+         if LastValue < Integer ((Sensor_Values'Length - 1) * Sensor_Value'Last / 2) then
+            Bot_Pos := 0;
+            return;
+         else
+            Bot_Pos := Integer ((Sensor_Values'Length - 1) * Sensor_Value'Last);
+            return;
+         end if;
+      end if;
+
+      LastValue := Integer (Avg / Sum);
+
+      Bot_Pos := Natural (LastValue);
+
+   end ReadLine;
 
    procedure LineFinder
    is
@@ -106,32 +131,28 @@ package body SPARKZumo is
 
       Offline_Inc           : constant := 1;
    begin
-      Zumo_QTR.ReadLine (Sensor_Values => QTR,
-                         ReadMode      => ReadMode,
-                         WhiteLine     => True,
-                         On_Line => On_Line,
-                         Bot_Pos       => Position);
+      ReadLine (Sensor_Values => QTR,
+                ReadMode      => ReadMode,
+                WhiteLine     => True,
+                On_Line       => On_Line,
+                Bot_Pos       => Position);
 
       Error := Position - Integer (((QTR'Length - 1) * Sensor_Value'Last) / 2);
 
       if not On_Line then
-         Offline_Offset := Offline_Offset + Offline_Inc;
          if Error < 0 then
             Error := Error + Offline_Offset;
          else
             Error := Error - Offline_Offset;
          end if;
-      else
-         Offline_Offset := -1;
-      end if;
 
- --     Serial_Print_Short (Msg => "Error: ",
- --                         Val => Short (Error));
+         Offline_Offset := Offline_Offset + Offline_Inc;
+      else
+         Offline_Offset := Natural'First;
+      end if;
 
       SpeedDifference := Error / Inv_Prop + Deriv * (Error - LastError);
 
- --     Serial_Print_Short (Msg => "Speed Diff: ",
- --                         Val => Short (SpeedDifference));
 
       LastError := Error;
 
@@ -151,24 +172,9 @@ package body SPARKZumo is
                             RightVelocity => RightSpeed);
    end LineFinder;
 
---     procedure PrintQTR
---     is
---        QTR : Sensor_Array;
---     begin
---        Zumo_QTR.ReadCalibrated (Sensor_Values => QTR,
---                                 ReadMode      => ReadMode);
---
---        for I in QTR'Range loop
---           Serial_Print_Short (Msg => I'Img & ": ",
---                               Val => Short (QTR (I)));
---        end loop;
---
---     end PrintQTR;
-
    procedure WorkLoop
    is
    begin
---      Zumo_Pushbutton.WaitForButton;
 
       LineFinder;
 

@@ -30,12 +30,6 @@ package Zumo_QTR is
    procedure ReadCalibrated (Sensor_Values : out Sensor_Array;
                              ReadMode      : in Sensor_Read_Mode);
 
-   procedure ReadLine (Sensor_Values : out Sensor_Array;
-                       ReadMode      : Sensor_Read_Mode;
-                       WhiteLine     : Boolean;
-                       On_Line       : out Boolean;
-                       Bot_Pos       : out Natural);
-
    Cal_Vals_On : Calibration_Array;
    Cal_Vals_Off : Calibration_Array;
 

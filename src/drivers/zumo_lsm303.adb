@@ -4,7 +4,6 @@ with Wire; use Wire;
 with Sparkduino; use Sparkduino;
 
 with Interfaces; use Interfaces;
-with Interfaces.C; use Interfaces.C;
 
 package body Zumo_LSM303 is
 
@@ -26,14 +25,14 @@ package body Zumo_LSM303 is
 
    procedure Init
    is
-      Init_Seq   : Byte_Array := (Regs'Enum_Rep (CTRL0), 2#0000_0000#,
-                                  Regs'Enum_Rep (CTRL1), 2#0101_0111#, -- 50Hz ODR, En X,Y,Z
-                                  Regs'Enum_Rep (CTRL2), 2#0000_0000#,
-                                  Regs'Enum_Rep (CTRL3), 2#0000_0000#,
-                                  Regs'Enum_Rep (CTRL4), 2#0000_0000#,
-                                  Regs'Enum_Rep (CTRL5), 2#1110_0100#, -- Temp EN, High Mag Res, 6.25Hz Mag ODR,
-                                  Regs'Enum_Rep (CTRL6), 2#0010_0000#, -- +4 gauss
-                                  Regs'Enum_Rep (CTRL7), 2#0000_0000#);
+      Init_Seq   : constant Byte_Array := (Regs'Enum_Rep (CTRL0), 2#0000_0000#,
+                                           Regs'Enum_Rep (CTRL1), 2#0101_0111#, -- 50Hz ODR, En X,Y,Z
+                                           Regs'Enum_Rep (CTRL2), 2#0000_0000#,
+                                           Regs'Enum_Rep (CTRL3), 2#0000_0000#,
+                                           Regs'Enum_Rep (CTRL4), 2#0000_0000#,
+                                           Regs'Enum_Rep (CTRL5), 2#1110_0100#, -- Temp EN, High Mag Res, 6.25Hz Mag ODR,
+                                           Regs'Enum_Rep (CTRL6), 2#0010_0000#, -- +4 gauss
+                                           Regs'Enum_Rep (CTRL7), 2#0000_0000#);
       Status     : Wire.Transmission_Status;
       Status_Pos : Integer;
 

@@ -1,7 +1,6 @@
 pragma SPARK_Mode;
 
 with System;
-with Interfaces.C; use Interfaces.C;
 
 package body Sparkduino is
 

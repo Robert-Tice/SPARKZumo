@@ -1,7 +1,5 @@
 pragma SPARK_Mode;
 
-with Types; use Types;
-
 package Zumo_Pushbutton is
 
    Initd : Boolean := False;

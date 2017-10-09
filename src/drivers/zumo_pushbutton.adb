@@ -1,6 +1,7 @@
 pragma SPARK_Mode;
 
 with Sparkduino; use Sparkduino;
+with Types; use Types;
 
 package body Zumo_Pushbutton is
 

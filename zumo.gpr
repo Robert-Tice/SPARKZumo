@@ -14,12 +14,11 @@ library project Zumo is
    end Ide;
 
    package Compiler is
-      for Switches ("sparkduino.ads") use ("-gnatd.5");
-      for Switches ("ada") use ("-gnateT=" & project'Project_Dir & "target.atp");
+      for Default_Switches ("Ada") use ("-gnatwa");
    end Compiler;
 
    package Builder is
-      for Global_Compilation_Switches ("ada") use ("-gnateT=" & project'Project_Dir & "target.atp");
+      for Global_Compilation_Switches ("Ada") use ("-gnateT=" & project'Project_Dir & "target.atp");
    end Builder;
 
    package Bind is

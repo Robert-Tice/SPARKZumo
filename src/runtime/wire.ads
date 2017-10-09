@@ -2,7 +2,6 @@ pragma SPARK_Mode;
 
 with Types; use Types;
 
-with System;
 with Interfaces; use Interfaces;
 
 package Wire is

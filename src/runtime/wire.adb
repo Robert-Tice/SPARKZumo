@@ -110,25 +110,6 @@ package body Wire is
       return Transmission_Status'Val (EndTransmission (Stop => True));
    end Write_Byte;
 
-   function Write_Bytes (Addr : Byte;
-                         Data : Byte_Array)
-                         return Transmission_Status
-   is
-      Bytes_Written : Byte;
-
-   begin
-      BeginTransmission (Addr => Addr);
-
-      for I in Data'Range loop
-         Bytes_Written := Write_Value (Val => Data (I));
-         if Bytes_Written /= 1 then
-            return Other_Err;
-         end if;
-      end loop;
-
-      return Transmission_Status'Val (EndTransmission (Stop => True));
-   end Write_Bytes;
-
    function RequestFrom (Addr  : Byte;
                          Quant : Integer;
                          Stop  : Boolean)

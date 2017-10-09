@@ -8,20 +8,10 @@ package body Zumo_QTR is
 
    EmitterPin : constant := 2;
 
-   CalibratedMinimumOn : Sensor_Value := Sensor_Value'First;
-   CalibratedMaximumOn : Sensor_Value := Sensor_Value'First;
-   CalibratedMinimumOff : Sensor_Value := Sensor_Value'First;
-   CalibratedMaxiumOff : Sensor_Value := Sensor_Value'First;
-
-   LastValue  : Integer := 0;
-
-   SensorPins : array (1 .. 6) of unsigned_char := (4, A3, 11, A0, A2, 5);
+   SensorPins : constant array (1 .. 6) of unsigned_char := (4, A3, 11, A0, A2, 5);
 
    Calibrated_On : Boolean := False;
    Calibrated_Off : Boolean := False;
-
-   Noise_Threshold : constant := Timeout / 10;
-   Line_Threshold : constant := Timeout / 2;
 
    Capacitor_Charge : constant := 5;
 
@@ -293,56 +283,5 @@ package body Zumo_QTR is
          end if;
       end loop;
    end ReadCalibrated;
-
-   procedure ReadLine (Sensor_Values : out Sensor_Array;
-                       ReadMode      : Sensor_Read_Mode;
-                       WhiteLine     : Boolean;
-                       On_Line       : out Boolean;
-                       Bot_Pos       : out Natural)
-   is
-      Avg     : Long := 0;
-      Sum     : Long := 0;
-      Value   : Sensor_Value;
-   begin
-      ReadCalibrated (Sensor_Values => Sensor_Values,
-                      ReadMode      => ReadMode);
-
-      On_Line := False;
-
-      for I in Sensor_Values'Range loop
-         Value := Sensor_Values (I);
-         if WhiteLine then
-            Value := Sensor_Value'Last - Value;
-         end if;
-
-         -- keep track of whether we see the line at all
-         if Value > Line_Threshold then
-            On_Line := True;
-         end if;
-
-         --  only average in values that are above the noise threshold
-         if Value > Noise_Threshold then
-            Avg := Avg + Long (Value) * (Long (I - 1) * Long (Sensor_Value'Last));
-            Sum := Sum + Long (Value);
-         end if;
-      end loop;
-
-      if not On_Line then
-         if LastValue < Integer ((Sensor_Values'Length - 1) * Sensor_Value'Last / 2) then
-            Bot_Pos := 0;
-            return;
-         else
-            Bot_Pos := Integer ((Sensor_Values'Length - 1) * Sensor_Value'Last);
-            return;
-         end if;
-      end if;
-
-      LastValue := Integer (Avg / Sum);
-
-      Bot_Pos := Natural (LastValue);
-
-   end ReadLine;
-
-
 
 end Zumo_QTR;

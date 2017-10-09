@@ -4,7 +4,6 @@ with Zumo_LSM303;
 with Zumo_L3gd20h;
 with Wire;
 
-with Types; use Types;
 with Sparkduino; use Sparkduino;
 
 with Interfaces.C; use Interfaces.C;
@@ -34,7 +33,7 @@ package body Zumo_Motion is
       Heading := Degrees (
                           Arctan (
                             Long_Float (Mag (Y)) / Long_Float (Mag (X))
-                           ) * (180.0 / 3.1415926));
+                           ) * (180.0 / Pi));
 
 
       if Heading > 360.0 then
