@@ -22,6 +22,8 @@ package body SPARKZumo is
 
    ReadMode : constant Sensor_Read_Mode := Emitters_On;
 
+   Offline_Offset : Integer := -1;
+
 --     procedure Print_Cal_Vals (ReadMode : Sensor_Read_Mode)
 --     is
 --     begin
@@ -98,15 +100,30 @@ package body SPARKZumo is
       SpeedDifference : Integer;
 
       LeftSpeed, RightSpeed : Motor_Speed := Default_Speed;
-      Inv_Prop : constant := 8;
-      Deriv : constant := 2;
+      Inv_Prop              : constant := 8;
+      Deriv                 : constant := 2;
+      On_Line               : Boolean;
+
+      Offline_Inc           : constant := 1;
    begin
       Zumo_QTR.ReadLine (Sensor_Values => QTR,
                          ReadMode      => ReadMode,
                          WhiteLine     => True,
+                         On_Line => On_Line,
                          Bot_Pos       => Position);
 
       Error := Position - Integer (((QTR'Length - 1) * Sensor_Value'Last) / 2);
+
+      if not On_Line then
+         Offline_Offset := Offline_Offset + Offline_Inc;
+         if Error < 0 then
+            Error := Error + Offline_Offset;
+         else
+            Error := Error - Offline_Offset;
+         end if;
+      else
+         Offline_Offset := -1;
+      end if;
 
  --     Serial_Print_Short (Msg => "Error: ",
  --                         Val => Short (Error));

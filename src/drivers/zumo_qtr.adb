@@ -297,15 +297,17 @@ package body Zumo_QTR is
    procedure ReadLine (Sensor_Values : out Sensor_Array;
                        ReadMode      : Sensor_Read_Mode;
                        WhiteLine     : Boolean;
+                       On_Line       : out Boolean;
                        Bot_Pos       : out Natural)
    is
-      On_Line : Boolean := False;
       Avg     : Long := 0;
       Sum     : Long := 0;
       Value   : Sensor_Value;
    begin
       ReadCalibrated (Sensor_Values => Sensor_Values,
                       ReadMode      => ReadMode);
+
+      On_Line := False;
 
       for I in Sensor_Values'Range loop
          Value := Sensor_Values (I);
