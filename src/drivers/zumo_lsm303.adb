@@ -26,13 +26,14 @@ package body Zumo_LSM303 is
    procedure Init
    is
       Init_Seq   : constant Byte_Array := (Regs'Enum_Rep (CTRL0), 2#0000_0000#,
-                                           Regs'Enum_Rep (CTRL1), 2#0101_0111#, -- 50Hz ODR, En X,Y,Z
+                                           Regs'Enum_Rep (CTRL1), 2#0101_0111#,
                                            Regs'Enum_Rep (CTRL2), 2#0000_0000#,
                                            Regs'Enum_Rep (CTRL3), 2#0000_0000#,
                                            Regs'Enum_Rep (CTRL4), 2#0000_0000#,
-                                           Regs'Enum_Rep (CTRL5), 2#1110_0100#, -- Temp EN, High Mag Res, 6.25Hz Mag ODR,
-                                           Regs'Enum_Rep (CTRL6), 2#0010_0000#, -- +4 gauss
-                                           Regs'Enum_Rep (CTRL7), 2#0000_0000#);
+                                           Regs'Enum_Rep (CTRL5), 2#1110_0100#,
+                                           Regs'Enum_Rep (CTRL6), 2#0010_0000#,
+                                           Regs'Enum_Rep (CTRL7),
+                                           2#0000_0000#);
       Status     : Wire.Transmission_Status;
       Status_Pos : Integer;
 
@@ -54,7 +55,6 @@ package body Zumo_LSM303 is
 
          Index := Index + 2;
       end loop;
-
 
    end Init;
 
@@ -105,13 +105,12 @@ package body Zumo_LSM303 is
                        Data => Raw_Arr);
    end Read_Acc;
 
-
-   function Read_Temp return Short
+   function Read_Temp return short
    is
       Arr     : Byte_Array (1 .. 2);
 
       Sign_Bit : constant Byte := 2#0000_1000#;
-      Ret_Val  : Short
+      Ret_Val  : short
         with Address => Arr'Address;
    begin
       Wire.Read_Bytes (Addr => LM_Addr,
@@ -121,13 +120,11 @@ package body Zumo_LSM303 is
       if (Arr (Arr'Last) and Sign_Bit) > 0 then
          Arr (Arr'Last) := Arr (Arr'Last) or 2#1111_0000#;
       else
-         Arr (Arr'Last) := Arr(Arr'Last) and 2#0000_0111#;
+         Arr (Arr'Last) := Arr (Arr'Last) and 2#0000_0111#;
       end if;
 
       return Ret_Val;
 
    end Read_Temp;
-
-
 
 end Zumo_LSM303;

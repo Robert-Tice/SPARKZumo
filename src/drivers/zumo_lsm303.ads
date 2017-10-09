@@ -10,7 +10,7 @@ package Zumo_LSM303 is
 
    procedure Init;
 
-   function Read_Temp return Short;
+   function Read_Temp return short;
    function Read_M_Status return Byte;
    function Read_A_Status return Byte;
 
@@ -18,6 +18,8 @@ package Zumo_LSM303 is
    procedure Read_Acc (Data : out Axis_Data);
 
 private
+
+   procedure Check_WHOAMI;
 
    type Regs is
      (TEMP_OUT_L,
@@ -135,6 +137,5 @@ private
       TIME_WINDOW  => 16#3D#,
       ACT_THS      => 16#3E#,
       ACT_DUR      => 16#3F#);
-
 
 end Zumo_LSM303;

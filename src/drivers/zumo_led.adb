@@ -7,7 +7,6 @@ package body Zumo_LED is
 
    YellowLEDPin : constant := 13;
 
-
    procedure Init
    is
    begin
@@ -17,20 +16,17 @@ package body Zumo_LED is
 
    end Init;
 
-
-   procedure Yellow_LED (On : Boolean)
+   procedure Yellow_Led (On : Boolean)
    is
    begin
       if On then
          DigitalWrite (Pin => YellowLEDPin,
-                       Val => DigPinValue'Pos(HIGH));
+                       Val => DigPinValue'Pos (HIGH));
       else
          DigitalWrite (Pin => YellowLEDPin,
-                       Val => DigPinValue'Pos(LOW));
+                       Val => DigPinValue'Pos (LOW));
       end if;
       State := On;
-   end Yellow_LED;
-
-
+   end Yellow_Led;
 
 end Zumo_LED;

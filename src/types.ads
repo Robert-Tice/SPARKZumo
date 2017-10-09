@@ -15,8 +15,7 @@ package Types is
 
    type Axises is (X, Y, Z);
 
-   type Axis_Data is array (Axises) of Short;
-
+   type Axis_Data is array (Axises) of short;
 
    type PinMode is
      (INPUT,

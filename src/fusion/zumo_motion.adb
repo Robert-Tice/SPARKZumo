@@ -8,14 +8,12 @@ with Sparkduino; use Sparkduino;
 
 with Interfaces.C; use Interfaces.C;
 
-
 with Ada.Numerics.Long_Elementary_Functions;
 use Ada.Numerics.Long_Elementary_Functions;
 
 package body Zumo_Motion is
 
    Pi : constant := 3.1415926;
-
 
    function Get_Heading return Degrees
    is
@@ -34,7 +32,6 @@ package body Zumo_Motion is
                           Arctan (
                             Long_Float (Mag (Y)) / Long_Float (Mag (X))
                            ) * (180.0 / Pi));
-
 
       if Heading > 360.0 then
          Heading := Heading - 360.0;
@@ -55,9 +52,7 @@ package body Zumo_Motion is
       Wire.Init_Master;
       Zumo_LSM303.Init;
       Zumo_L3gd20h.Init;
-     null;
+      null;
    end Init;
 
-
 end Zumo_Motion;
-

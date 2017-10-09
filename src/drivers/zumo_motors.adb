@@ -6,10 +6,8 @@ with Sparkduino; use Sparkduino;
 
 package body Zumo_Motors is
 
-
    FlipLeft : Boolean := False;
    FlipRight : Boolean := False;
-
 
    PWM_L : constant := 10;
    PWM_R : constant := 9;
@@ -23,11 +21,11 @@ package body Zumo_Motors is
                        Reason => "Setting mapped registers");
       Initd := True;
       SetPinMode (Pin  => PWM_L,
-                  Mode => PinMode'Pos(OUTPUT));
+                  Mode => PinMode'Pos (OUTPUT));
       SetPinMode (Pin  => PWM_R,
-                  Mode => PinMode'Pos(OUTPUT));
+                  Mode => PinMode'Pos (OUTPUT));
       SetPinMode (Pin  => DIR_L,
-                  Mode => PinMode'Pos(OUTPUT));
+                  Mode => PinMode'Pos (OUTPUT));
       SetPinMode (Pin  => DIR_R,
                   Mode => PinMode'Pos (OUTPUT));
 
@@ -63,11 +61,11 @@ package body Zumo_Motors is
          Speed := abs Speed;
       end if;
 
-      OCR1B := Word(Speed);
+      OCR1B := Word (Speed);
 
       if Rev xor FlipLeft then
          DigitalWrite (Pin => DIR_L,
-                       Val => DigPinValue'Pos(HIGH));
+                       Val => DigPinValue'Pos (HIGH));
       else
          DigitalWrite (Pin => DIR_L,
                        Val => DigPinValue'Pos (LOW));
@@ -88,14 +86,14 @@ package body Zumo_Motors is
          Speed := abs Speed;
       end if;
 
-      OCR1A := Word(Speed);
+      OCR1A := Word (Speed);
 
       if Rev xor FlipRight then
          DigitalWrite (Pin => DIR_R,
-                       Val => DigPinValue'Pos(HIGH));
+                       Val => DigPinValue'Pos (HIGH));
       else
          DigitalWrite (Pin => DIR_R,
-                       Val => DigPinValue'Pos(LOW));
+                       Val => DigPinValue'Pos (LOW));
       end if;
 
    end SetRightSpeed;
@@ -106,6 +104,6 @@ package body Zumo_Motors is
    begin
       SetLeftSpeed (Velocity => LeftVelocity);
       SetRightSpeed (Velocity => RightVelocity);
-   end SetSPeed;
+   end SetSpeed;
 
 end Zumo_Motors;

@@ -14,4 +14,10 @@ package Zumo_Pushbutton is
    procedure WaitForButton
      with Pre => Initd;
 
+private
+
+   procedure WaitForPress;
+
+   procedure WaitForRelease;
+
 end Zumo_Pushbutton;

@@ -5,7 +5,7 @@ with Interfaces.C; use Interfaces.C;
 
 package body Wire is
 
-   Timeout : constant Unsigned_Long := 1;
+   Timeout : constant unsigned_long := 1;
 
    function Read_Byte (Addr : Byte;
                        Reg  : Byte)
@@ -19,7 +19,7 @@ package body Wire is
    begin
       Wire.BeginTransmission (Addr => Addr);
       Bytes_Written := Wire.Write_Value (Val => Reg);
-      Status := Transmission_Status'Val(Wire.EndTransmission (Stop => True));
+      Status := Transmission_Status'Val (Wire.EndTransmission (Stop => True));
 
       if Status /= Wire.Success or Bytes_Written /= 1 then
          Serial_Print ("Could not set register for read");
@@ -49,11 +49,11 @@ package body Wire is
       Bytes_Written : Byte;
       Status     : Transmission_Status;
 
-      Start_Time : Unsigned_Long;
+      Start_Time : unsigned_long;
    begin
       Wire.BeginTransmission (Addr => Addr);
       Bytes_Written := Wire.Write_Value (Val => (Reg or 16#80#));
-      Status := Transmission_Status'Val(Wire.EndTransmission (Stop => True));
+      Status := Transmission_Status'Val (Wire.EndTransmission (Stop => True));
 
       if Status /= Wire.Success or Bytes_Written /= 1 then
          Serial_Print ("Could not set register for read");
@@ -85,7 +85,6 @@ package body Wire is
          Data (I) := Wire.Read;
       end loop;
    end Read_Bytes;
-
 
    function Write_Byte (Addr : Byte;
                         Reg  : Byte;
@@ -136,6 +135,5 @@ package body Wire is
 
       return EndTransmission_C (Stop => CB);
    end EndTransmission;
-
 
 end Wire;

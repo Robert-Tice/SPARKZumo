@@ -6,14 +6,13 @@ with Types; use Types;
 
 package Sparkduino is
 
-
-   procedure SetPinMode (Pin  : Unsigned_Char;
-                         Mode : Unsigned_Char)
+   procedure SetPinMode (Pin  : unsigned_char;
+                         Mode : unsigned_char)
      with Global => null;
    pragma Import (C, SetPinMode, "pinMode");
 
    procedure DigitalWrite (Pin : unsigned_char;
-                           Val : Unsigned_Char)
+                           Val : unsigned_char)
      with Global => null;
    pragma Import (C, DigitalWrite, "digitalWrite");
 
@@ -21,11 +20,11 @@ package Sparkduino is
      with Global => null;
    pragma Import (C, DigitalRead, "digitalRead");
 
-   function Millis return Unsigned_Long
+   function Millis return unsigned_long
      with Global => null;
    pragma Import (C, Millis, "millis");
 
-   function Micros return Unsigned_Long
+   function Micros return unsigned_long
      with Global => null;
    pragma Import (C, Micros, "micros");
 
@@ -33,7 +32,7 @@ package Sparkduino is
      with Global => null;
    pragma Import (C, DelayMicroseconds, "delayMicroseconds");
 
-   procedure SysDelay (Time : Unsigned_Long)
+   procedure SysDelay (Time : unsigned_long)
      with Global => null;
    pragma Import (C, SysDelay, "delay");
 
@@ -48,7 +47,7 @@ package Sparkduino is
      with SPARK_Mode => Off;
 
    procedure Serial_Print_Short (Msg : String;
-                                 Val : Short)
+                                 Val : short)
      with SPARK_Mode => Off;
 
    procedure Serial_Print_Float (Msg : String;
@@ -60,8 +59,7 @@ package Sparkduino is
                                        Max   : Sensor_Value);
    pragma Import (C, Serial_Print_Calibration, "Serial_Print_Calibration");
 
-
-   -- analog pin mappings
+   --  analog pin mappings
    A0 : constant := 14;
    A1 : constant := 15;
    A2 : constant := 16;
@@ -70,6 +68,5 @@ package Sparkduino is
    A5 : constant := 19;
    A6 : constant := 20;
    A7 : constant := 21;
-
 
 end Sparkduino;

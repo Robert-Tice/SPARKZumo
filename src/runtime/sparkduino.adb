@@ -12,23 +12,22 @@ package body Sparkduino is
    pragma Import (C, Arduino_Serial_Print_Byte, "Serial_Print_Byte");
 
    procedure Arduino_Serial_Print_Short (Msg : System.Address;
-                                         Val : Short);
+                                         Val : short);
    pragma Import (C, Arduino_Serial_Print_Short, "Serial_Print_Short");
 
    procedure Arduino_Serial_Print_Float (Msg : System.Address;
                                          Val : Float);
    pragma Import (C, Arduino_Serial_Print_Float, "Serial_Print_Float");
 
-
    procedure Serial_Print (Msg : String)
      with SPARK_Mode => Off
    is
-      Msg_Null : char_array (Size_T (Msg'First) .. Size_T (Msg'Last + 1));
+      Msg_Null : char_array (size_t (Msg'First) .. size_t (Msg'Last + 1));
    begin
       for I in Msg'Range loop
-         Msg_Null (Size_T (I)) := Char (Msg (I));
+         Msg_Null (size_t (I)) := char (Msg (I));
       end loop;
-      Msg_Null (Msg_Null'Last) := Nul;
+      Msg_Null (Msg_Null'Last) := nul;
       Arduino_Serial_Print (Msg => Msg_Null'Address);
    end Serial_Print;
 
@@ -36,26 +35,26 @@ package body Sparkduino is
                                 Val : Byte)
      with SPARK_Mode => OFf
    is
-      Msg_Null : char_array (Size_T (Msg'First) .. Size_T (Msg'Last + 1));
+      Msg_Null : char_array (size_t (Msg'First) .. size_t (Msg'Last + 1));
    begin
       for I in Msg'Range loop
-         Msg_Null (Size_T (I)) := Char (Msg (I));
+         Msg_Null (size_t (I)) := char (Msg (I));
       end loop;
-      Msg_Null (Msg_Null'Last) := Nul;
+      Msg_Null (Msg_Null'Last) := nul;
       Arduino_Serial_Print_Byte (Msg => Msg_Null'Address,
                                  Val => Val);
    end Serial_Print_Byte;
 
    procedure Serial_Print_Short (Msg : String;
-                                 Val : Short)
+                                 Val : short)
      with SPARK_Mode => OFf
    is
-      Msg_Null : Char_Array (Size_T (Msg'First) .. Size_T (Msg'Last + 1));
+      Msg_Null : char_array (size_t (Msg'First) .. size_t (Msg'Last + 1));
    begin
       for I in Msg'Range loop
-         Msg_Null (Size_T (I)) := Char (Msg (I));
+         Msg_Null (size_t (I)) := char (Msg (I));
       end loop;
-      Msg_Null (Msg_Null'Last) := Nul;
+      Msg_Null (Msg_Null'Last) := nul;
       Arduino_Serial_Print_Short (Msg => Msg_Null'Address,
                                   Val => Val);
    end Serial_Print_Short;
@@ -64,17 +63,14 @@ package body Sparkduino is
                                       Val : Float)
      with SPARK_Mode => OFf
    is
-      Msg_Null : Char_Array (Size_T (Msg'First) .. Size_T (Msg'Last + 1));
+      Msg_Null : char_array (size_t (Msg'First) .. size_t (Msg'Last + 1));
    begin
       for I in Msg'Range loop
-         Msg_Null (Size_T (I)) := Char (Msg (I));
+         Msg_Null (size_t (I)) := char (Msg (I));
       end loop;
-      Msg_Null (Msg_Null'Last) := Nul;
+      Msg_Null (Msg_Null'Last) := nul;
       Arduino_Serial_Print_Float (Msg => Msg_Null'Address,
                                   Val => Val);
    end Serial_Print_Float;
-
-
-
 
 end Sparkduino;

@@ -8,7 +8,8 @@ package body Zumo_QTR is
 
    EmitterPin : constant := 2;
 
-   SensorPins : constant array (1 .. 6) of unsigned_char := (4, A3, 11, A0, A2, 5);
+   SensorPins : constant array (1 .. 6) of unsigned_char :=
+                  (4, A3, 11, A0, A2, 5);
 
    Calibrated_On : Boolean := False;
    Calibrated_Off : Boolean := False;
@@ -28,13 +29,13 @@ package body Zumo_QTR is
 
    procedure Read_Private (Sensor_Values : out Sensor_Array)
    is
-      StartTime : Unsigned_Long;
-      ElapsedTime : Unsigned_Long := 0;
+      StartTime : unsigned_long;
+      ElapsedTime : unsigned_long := 0;
 
       Pin_Sense   : array (Sensor_Array'Range) of Boolean := (others => False);
       All_Complete : Boolean := False;
    begin
-      -- Set I/O line high to charge capacitor node
+      --  Set I/O line high to charge capacitor node
       for I in Sensor_Values'Range loop
          Sensor_Values (I) := Sensor_Value'Last;
 
@@ -44,30 +45,32 @@ package body Zumo_QTR is
                        Val => DigPinValue'Pos (HIGH));
       end loop;
 
-      -- delay to wait for charge
+      --  delay to wait for charge
       DelayMicroseconds (Time => Capacitor_Charge);
 
-      -- Set I/O lines back to inputs
+      --  Set I/O lines back to inputs
       for I in Sensor_Values'Range loop
          SetPinMode (Pin  => SensorPins (I),
                      Mode => PinMode'Pos (INPUT));
 
-         -- disable the internal pullup
+         --  disable the internal pullup
          DigitalWrite (Pin => SensorPins (I),
-                       Val => DigPinValue'Pos(LOW));
+                       Val => DigPinValue'Pos (LOW));
       end loop;
 
-      -- measure the time for the voltage to decay
+      --  measure the time for the voltage to decay
       StartTime := Micros;
 
-      while ElapsedTime < Unsigned_Long (Sensor_Value'Last) and not All_Complete loop
+      while ElapsedTime < unsigned_long (Sensor_Value'Last) and not
+        All_Complete loop
          All_Complete := True;
 
          for I in Sensor_Values'Range loop
 
             if not Pin_Sense (I) then
 
-               if DigitalRead (Pin => SensorPins (I)) = DigPinValue'Pos (LOW) then
+               if DigitalRead (Pin => SensorPins (I)) = DigPinValue'Pos (LOW)
+               then
                   Sensor_Values (I) := Sensor_Value (ElapsedTime);
                   Pin_Sense (I) := True;
                else
@@ -83,9 +86,8 @@ package body Zumo_QTR is
 
    end Read_Private;
 
-
    procedure Read_Sensors (Sensor_Values : out Sensor_Array;
-                           ReadMode      : in Sensor_Read_Mode)
+                           ReadMode      : Sensor_Read_Mode)
    is
       Off_Values : Sensor_Array;
    begin
@@ -100,7 +102,7 @@ package body Zumo_QTR is
       ChangeEmitters (On => False);
 
       if ReadMode = Emitters_On_Off then
-      Read_Private (Sensor_Values => Off_Values);
+         Read_Private (Sensor_Values => Off_Values);
          for I in Sensor_Values'Range loop
             Sensor_Values (I) := (Sensor_Values (I) + Off_Values (I)) / 2;
          end loop;
@@ -112,10 +114,10 @@ package body Zumo_QTR is
    begin
       if On then
          DigitalWrite (Pin => EmitterPin,
-                       Val => DigPinValue'Pos(HIGH));
+                       Val => DigPinValue'Pos (HIGH));
       else
          DigitalWrite (Pin => EmitterPin,
-                       Val => DigPinValue'Pos(LOW));
+                       Val => DigPinValue'Pos (LOW));
       end if;
       Emitters_State := On;
 
@@ -142,7 +144,6 @@ package body Zumo_QTR is
          end loop;
       end loop;
 
-
    end Calibrate_Private;
 
    procedure Calibrate (ReadMode : Sensor_Read_Mode := Emitters_On)
@@ -167,7 +168,6 @@ package body Zumo_QTR is
             Calibrated_On := True;
       end case;
    end Calibrate;
-
 
    procedure ResetCalibration (ReadMode : Sensor_Read_Mode)
    is
@@ -200,7 +200,7 @@ package body Zumo_QTR is
    end ResetCalibration;
 
    procedure ReadCalibrated (Sensor_Values : out Sensor_Array;
-                             ReadMode      : in Sensor_Read_Mode)
+                             ReadMode      : Sensor_Read_Mode)
    is
       CalMin : Sensor_Value;
       CalMax : Sensor_Value;
@@ -248,7 +248,8 @@ package body Zumo_QTR is
                CalMax := Cal_Vals_Off (I).Max;
                CalMin := Cal_Vals_Off (I).Min;
             when Emitters_On_Off =>
-               -- TODO: handle case where current sensor value is outside of calibration range
+               --  TODO: handle case where current sensor value is outside of
+               --  calibration range
                if Cal_Vals_Off (I).Min < Cal_Vals_On (I).Min then
                   CalMin := Sensor_Value'Last;
                else
@@ -269,8 +270,8 @@ package body Zumo_QTR is
          if Denom /= 0 then
 
             X := Integer (
-                          Long (Sensor_Values (I) - CalMin) *
-                            Long (Sensor_Value'Last) / Long (Denom));
+                          long (Sensor_Values (I) - CalMin) *
+                            long (Sensor_Value'Last) / long (Denom));
 
             if X < Integer (Sensor_Value'First) then
                X := Integer (Sensor_Value'First);

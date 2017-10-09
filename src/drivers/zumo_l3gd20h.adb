@@ -29,7 +29,8 @@ package body Zumo_L3gd20h is
                                            Regs'Enum_Rep (CTRL3), 2#0000_0000#,
                                            Regs'Enum_Rep (CTRL4), 2#0011_0000#,
                                            Regs'Enum_Rep (CTRL5), 2#0000_0000#,
-                                           Regs'Enum_Rep (LOW_ODR), 2#0000_0001#);
+                                           Regs'Enum_Rep (LOW_ODR),
+                                           2#0000_0001#);
       Status     : Wire.Transmission_Status;
       Status_Pos : Integer;
 
@@ -53,10 +54,10 @@ package body Zumo_L3gd20h is
       end loop;
    end Init;
 
-   function Read_Temp return Signed_Char
+   function Read_Temp return signed_char
    is
       BB : Byte;
-      Ret_Val : Signed_Char
+      Ret_Val : signed_char
         with Address => BB'Address;
    begin
       BB := Wire.Read_Byte (Addr => Chip_Addr,

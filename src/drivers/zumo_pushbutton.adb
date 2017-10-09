@@ -5,7 +5,6 @@ with Types; use Types;
 
 package body Zumo_Pushbutton is
 
-
    Zumo_Button : constant := 12;
    Zumo_Button_Pullup : constant PinMode := INPUT_PULLUP;
    Zumo_Button_Default_Pinval : constant DigPinValue := HIGH;
@@ -16,7 +15,7 @@ package body Zumo_Pushbutton is
 
       Initd := True;
       SetPinMode (Pin  => Zumo_Button,
-                  Mode => PinMode'Pos(Zumo_Button_Pullup));
+                  Mode => PinMode'Pos (Zumo_Button_Pullup));
 
       DelayMicroseconds (Time => 5);
 
@@ -25,7 +24,7 @@ package body Zumo_Pushbutton is
    function IsPressed return Boolean
    is
    begin
-        return DigitalRead (Pin => Zumo_Button) /=
+      return DigitalRead (Pin => Zumo_Button) /=
         DigPinValue'Pos (Zumo_Button_Default_Pinval);
    end IsPressed;
 
@@ -59,6 +58,5 @@ package body Zumo_Pushbutton is
       WaitForPress;
       WaitForRelease;
    end WaitForButton;
-
 
 end Zumo_Pushbutton;

@@ -4,18 +4,20 @@ with Types; use Types;
 with Interfaces.C; use Interfaces.C;
 
 package Zumo_L3gd20h is
-   
+
    Gain : constant := 0.07;  -- degrees/s/digit
 
    procedure Init;
-   
-   function Read_Temp return Signed_Char;
+
+   function Read_Temp return signed_char;
    function Read_Status return Byte;
-   
-   procedure Read_Gyro (Data : out Axis_Data);  
-   
-   
+
+   procedure Read_Gyro (Data : out Axis_Data);
+
 private
+
+   procedure Check_WHOAMI;
+
    type Regs is
      (WHO_AM_I,
       CTRL1,
@@ -30,7 +32,7 @@ private
       OUT_X_H,
       OUT_Y_L,
       OUT_Y_H,
-      OUT_Z_L, 
+      OUT_Z_L,
       OUT_Z_H,
       FIFO_CTRL,
       FIFO_SRC,
@@ -45,7 +47,7 @@ private
       IG_DURATION,
       LOW_ODR)
      with Size => 8;
-   
+
    for Regs use
      (WHO_AM_I => 16#0F#,
       CTRL1 => 16#20#,
@@ -74,7 +76,5 @@ private
       IG_THS_ZL => 16#37#,
       IG_DURATION => 16#38#,
       LOW_ODR => 16#39#);
-      
-      
 
 end Zumo_L3gd20h;

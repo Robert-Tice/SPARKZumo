@@ -1,6 +1,5 @@
 pragma SPARK_Mode;
 
-
 package Zumo_LED is
 
    Initd : Boolean := False;

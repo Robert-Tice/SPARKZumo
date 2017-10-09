@@ -6,12 +6,8 @@ with Zumo_Motors;
 with Zumo_QTR;
 
 with Interfaces.C; use Interfaces.C;
-with Types; use Types;
 
-
-package body SPARKZumo
-  with SPARK_Mode
-is
+package body SPARKZumo is
 
    Default_Speed : constant Motor_Speed := Motor_Speed'Last;
    Stop  : constant := 0;
@@ -58,7 +54,6 @@ is
       Zumo_Motors.SetSpeed (LeftVelocity  => Stop,
                             RightVelocity => Stop);
 
-
       Zumo_LED.Yellow_Led (On => True);
       Zumo_Pushbutton.WaitForButton;
    end Setup;
@@ -69,8 +64,8 @@ is
                        On_Line       : out Boolean;
                        Bot_Pos       : out Natural)
    is
-      Avg     : Long := 0;
-      Sum     : Long := 0;
+      Avg     : long := 0;
+      Sum     : long := 0;
       Value   : Sensor_Value;
 
       Noise_Threshold : constant := Timeout / 10;
@@ -87,24 +82,28 @@ is
             Value := Sensor_Value'Last - Value;
          end if;
 
-         -- keep track of whether we see the line at all
+         --  keep track of whether we see the line at all
          if Value > Line_Threshold then
             On_Line := True;
          end if;
 
          --  only average in values that are above the noise threshold
          if Value > Noise_Threshold then
-            Avg := Avg + Long (Value) * (Long (I - 1) * Long (Sensor_Value'Last));
-            Sum := Sum + Long (Value);
+            Avg := Avg + long (Value) * (long (I - 1) *
+                                           long (Sensor_Value'Last));
+            Sum := Sum + long (Value);
          end if;
       end loop;
 
       if not On_Line then
-         if LastValue < Integer ((Sensor_Values'Length - 1) * Sensor_Value'Last / 2) then
+         if LastValue < Integer ((Sensor_Values'Length - 1) *
+                                   Sensor_Value'Last / 2)
+         then
             Bot_Pos := 0;
             return;
          else
-            Bot_Pos := Integer ((Sensor_Values'Length - 1) * Sensor_Value'Last);
+            Bot_Pos := Integer ((Sensor_Values'Length - 1) *
+                                  Sensor_Value'Last);
             return;
          end if;
       end if;
@@ -153,7 +152,6 @@ is
 
       SpeedDifference := Error / Inv_Prop + Deriv * (Error - LastError);
 
-
       LastError := Error;
 
       if SpeedDifference > Motor_Speed'Last then
@@ -179,6 +177,5 @@ is
       LineFinder;
 
    end WorkLoop;
-
 
 end SPARKZumo;

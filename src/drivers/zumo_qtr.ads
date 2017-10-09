@@ -18,7 +18,7 @@ package Zumo_QTR is
      Post => Initd;
 
    procedure Read_Sensors (Sensor_Values : out Sensor_Array;
-                           ReadMode      : in Sensor_Read_Mode)
+                           ReadMode      : Sensor_Read_Mode)
      with Pre => Initd;
 
    procedure ChangeEmitters (On : Boolean);
@@ -28,11 +28,18 @@ package Zumo_QTR is
    procedure ResetCalibration (ReadMode : Sensor_Read_Mode);
 
    procedure ReadCalibrated (Sensor_Values : out Sensor_Array;
-                             ReadMode      : in Sensor_Read_Mode);
+                             ReadMode      : Sensor_Read_Mode);
 
    Cal_Vals_On : Calibration_Array;
    Cal_Vals_Off : Calibration_Array;
 
    Emitters_State : Boolean := False;
+
+private
+
+   procedure Read_Private (Sensor_Values : out Sensor_Array);
+
+   procedure Calibrate_Private (Cal_Vals : in out Calibration_Array;
+                                ReadMode : Sensor_Read_Mode);
 
 end Zumo_QTR;
