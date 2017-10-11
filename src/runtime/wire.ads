@@ -16,6 +16,7 @@ package Wire is
                             Rx_NACK_Data  => 3,
                             Other_Err     => 4);
 
+
    function Byte2TSI (BB : Byte)
                       return Transmission_Status_Index;
 
@@ -38,7 +39,8 @@ package Wire is
    procedure Read_Bytes (Addr : Byte;
                          Reg  : Byte;
                          Data : out Byte_Array)
-     with Global => Transmission_Status;
+     with Global => Transmission_Status,
+     Pre => (Data'Length > 0);
 
    function Write_Byte (Addr : Byte;
                         Reg  : Byte;
@@ -52,7 +54,9 @@ private
    function RequestFrom (Addr  : Byte;
                          Quant : Integer;
                          Stop  : Boolean)
-                         return Byte;
+                         return Byte
+     with Pre => (Quant <= Integer (Byte'Last)),
+     Post => (Integer (RequestFrom'Result) <= Quant);
 
    function RequestFrom_C (Addr  : Byte;
                            Quant : Integer;

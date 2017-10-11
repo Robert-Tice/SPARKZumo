@@ -1,7 +1,6 @@
 pragma SPARK_Mode;
 
 with Wire; use Wire;
---with Sparkduino; use Sparkduino;
 
 with Interfaces; use Interfaces;
 

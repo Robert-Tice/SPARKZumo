@@ -101,7 +101,7 @@ package body Wire is
                                  Quant => Data'Length,
                                  Stop  => True);
 
-      if Bytes_Read /= Data'Length then
+      if Bytes_Read /= Data'Length or Bytes_Read = 0 then
          Data := (others => Byte'Last);
          return;
       end if;

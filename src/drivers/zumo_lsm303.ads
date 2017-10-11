@@ -14,7 +14,7 @@ package Zumo_LSM303 is
      with Pre => not Initd,
      Post => Initd;
 
-   function Read_Temp return Short
+   function Read_Temp return short
      with Pre => Initd;
    function Read_M_Status return Byte
      with Pre => Initd;

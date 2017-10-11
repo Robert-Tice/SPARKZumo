@@ -1,11 +1,11 @@
-pragma SPARK_Mode;
+--pragma SPARK_Mode;
 
 with Interfaces.C; use Interfaces.C;
 with System;
 
 package body Zumo_Buzzer is
 
-   BuzzerFinished : Boolean := True;
+--   BuzzerFinished : Boolean := True;
 
    procedure Enable_Timer_ISR (State : Boolean)
    is

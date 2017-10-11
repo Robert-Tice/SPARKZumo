@@ -263,12 +263,10 @@ package body Zumo_QTR is
                end if;
          end case;
 
-         Denom := CalMax - CalMin;
+         if CalMin < CalMax then
+            Denom := CalMax - CalMin;
 
-         if Denom /= 0 then
-
-            X := Integer (
-                          long (Sensor_Values (I) - CalMin) *
+            X := Integer (long (Sensor_Values (I) - CalMin) *
                             long (Sensor_Value'Last) / long (Denom));
 
             if X < Integer (Sensor_Value'First) then

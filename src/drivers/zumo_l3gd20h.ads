@@ -13,7 +13,7 @@ package Zumo_L3gd20h is
      with Pre => not Initd,
      Post => Initd;
 
-   function Read_Temp return Signed_Char
+   function Read_Temp return signed_char
      with Pre => Initd;
    function Read_Status return Byte
      with Pre => Initd;
@@ -83,5 +83,12 @@ private
                                         IG_THS_ZL   => 16#37#,
                                         IG_DURATION => 16#38#,
                                         LOW_ODR     => 16#39#);
+
+   type Register_Bytes is record
+      Register : Reg_Index;
+      Value    : Byte;
+   end record;
+
+   type Register_Byte_Array is array (Natural range <>) of Register_Bytes;
 
 end Zumo_L3gd20h;

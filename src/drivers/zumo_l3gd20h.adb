@@ -45,6 +45,8 @@ package body Zumo_L3gd20h is
 
          Index := Index + 2;
       end loop;
+
+      Initd := True;
    end Init;
 
    function Read_Temp return signed_char

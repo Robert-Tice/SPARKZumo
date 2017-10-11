@@ -1,4 +1,4 @@
-pragma SPARK_Mode;
+--  pragma SPARK_Mode;
 
 with Zumo_LSM303;
 with Zumo_L3gd20h;

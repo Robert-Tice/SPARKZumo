@@ -1,24 +1,30 @@
 pragma SPARK_Mode;
 
+with Types; use Types;
+
 package SPARKZumo is
 
    Initd : Boolean := False;
+   ReadMode      : constant Sensor_Read_Mode := Emitters_On;
 
    procedure WorkLoop
-     with Pre => Initd;
+     with Global => (ReadMode),
+     Pre => Initd;
 
    procedure Setup
-     with Pre => not Initd,
+     with Global => null,
+     Pre => not Initd,
      Post => Initd;
 
 private
 
    procedure Calibration_Sequence
-     with Global => null,
+     with Global => (ReadMode),
      Pre => Initd;
 
    procedure Inits
-     with Pre => not Initd,
+     with Global => (Initd),
+     Pre => not Initd,
      Post => Initd;
 
 end SPARKZumo;

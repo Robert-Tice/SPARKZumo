@@ -1,4 +1,4 @@
-pragma SPARK_Mode;
+--pragma SPARK_Mode;
 
 with Types; use Types;
 

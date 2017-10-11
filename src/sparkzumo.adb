@@ -6,11 +6,9 @@ with Zumo_Motors;
 with Zumo_QTR;
 
 with Line_Finder;
-with Types; use Types;
 
 package body SPARKZumo is
 
-   ReadMode      : constant Sensor_Read_Mode := Emitters_On;
    Stop          : constant := 0;
 
    procedure Calibration_Sequence

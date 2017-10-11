@@ -4,9 +4,7 @@ with Zumo_Motors;
 with Zumo_QTR;
 
 package body Line_Finder is
-   
-   Default_Speed : constant Motor_Speed := Motor_Speed'Last;
-   
+
    procedure LineFinder (ReadMode : Sensor_Read_Mode)
    is
       QTR      : Sensor_Array;
@@ -26,7 +24,7 @@ package body Line_Finder is
       else
          Offline_Offset := Natural'First;
       end if;
-      
+
       Error_Correct (Error      => Error,
                      LeftSpeed  => LeftSpeed,
                      RightSpeed => RightSpeed);
@@ -34,7 +32,7 @@ package body Line_Finder is
       Zumo_Motors.SetSpeed (LeftVelocity  => LeftSpeed,
                             RightVelocity => RightSpeed);
    end LineFinder;
-   
+
    procedure ReadLine (Sensor_Values : out Sensor_Array;
                        WhiteLine     : Boolean;
                        ReadMode      : Sensor_Read_Mode;
@@ -92,27 +90,40 @@ package body Line_Finder is
       end if;
 
    end ReadLine;
-   
+
    procedure Offline_Correction (Error : in out Robot_Position)
    is
-   begin    
-      
+      Error_Unsat : Integer;
+   begin
+
       if Error < 0 then
-         Error := Error + Offline_Offset;
+         Error_Unsat := Error + Offline_Offset;
       else
-         Error := Error - Offline_Offset;
+         Error_Unsat := Error - Offline_Offset;
       end if;
 
-      Offline_Offset := Offline_Offset + Offline_Inc; 
+      if Error_Unsat > Robot_Position'Last then
+         Error := Robot_Position'Last;
+      elsif Error_Unsat < Robot_Position'First then
+         Error := Robot_Position'First;
+      else
+         Error := Error_Unsat;
+      end if;
+
+      if Offline_Offset = Natural'Last then
+         Offline_Offset := 0;
+      else
+         Offline_Offset := Offline_Offset + Offline_Inc;
+      end if;
    end Offline_Correction;
-   
+
    procedure Error_Correct (Error : Robot_Position;
                             LeftSpeed : out Motor_Speed;
                             RightSpeed : out Motor_Speed)
    is
       Inv_Prop              : constant := 8;
       Deriv                 : constant := 2;
-      
+
       SpeedDifference : Integer;
    begin
       SpeedDifference := Error / Inv_Prop + Deriv * (Error - LastError);
@@ -132,9 +143,7 @@ package body Line_Finder is
          LeftSpeed := Default_Speed;
          RightSpeed := Default_Speed - Motor_Speed (SpeedDifference);
       end if;
-       
+
    end Error_Correct;
 
-  
-   
 end Line_Finder;
