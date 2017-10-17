@@ -63,4 +63,6 @@ package Types is
 
    type Degree_Axis is array (Axises) of Degrees;
 
+   type Boolean_Array is array (Integer range <>) of Boolean;
+
 end Types;

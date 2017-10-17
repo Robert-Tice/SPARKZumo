@@ -51,11 +51,9 @@ package Wire is
 private
 
    function RequestFrom (Addr  : Byte;
-                         Quant : Integer;
+                         Quant : Byte;
                          Stop  : Boolean)
-                         return Byte
-     with Pre => (Quant <= Integer (Byte'Last)),
-     Post => (Integer (RequestFrom'Result) <= Quant);
+                         return Byte;
 
    function RequestFrom_C (Addr  : Byte;
                            Quant : Integer;

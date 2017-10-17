@@ -1,4 +1,4 @@
-pragma SPARK_Mode;
+--  pragma SPARK_Mode;
 
 with Wire; use Wire;
 
@@ -50,7 +50,6 @@ package body Zumo_L3gd20h is
    end Init;
 
    function Read_Temp return signed_char
-     with SPARK_Mode => Off
    is
       BB : Byte := 0;
       Ret_Val : signed_char
@@ -69,7 +68,6 @@ package body Zumo_L3gd20h is
    end Read_Status;
 
    procedure Read_Gyro (Data : out Axis_Data)
-     with SPARK_Mode => Off
    is
       Raw_Arr : Byte_Array (1 .. Data'Length * 2)
         with Address => Data'Address;

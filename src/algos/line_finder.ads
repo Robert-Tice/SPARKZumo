@@ -12,16 +12,20 @@ private
    LastValue : Integer := 0;
    LastError : Integer := 0;
 
+   Noise_Threshold : constant := Timeout / 10;
+   Line_Threshold : constant := Timeout / 2;
+
+   type RobotLineState is
+     (Lost, Online, BranchRight, BranchLeft, Fork, Perp);
+
    Default_Speed : constant Motor_Speed := Motor_Speed'Last;
 
    procedure ReadLine (Sensor_Values : out Sensor_Array;
                        WhiteLine     : Boolean;
                        ReadMode      : Sensor_Read_Mode;
-                       On_Line       : out Boolean;
+                       Bot_State     : out RobotLineState;
                        Bot_Pos       : out Robot_Position)
-     with Global => (In_Out => LastValue),
-     Post => (if not On_Line then (Bot_Pos = Robot_Position'First or
-                  Bot_Pos = Robot_Position'Last));
+     with Global => (In_Out => LastValue);
 
    Offline_Inc : constant := 1;
 
@@ -40,5 +44,7 @@ private
                  RightSpeed => (Error, LastError, Default_Speed),
                  LastError  => (Error, LastError)),
      Post => (LastError = Error);
+
+   function CalculateBotState (D : Boolean_Array) return RobotLineState;
 
 end Line_Finder;

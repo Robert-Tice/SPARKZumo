@@ -8,7 +8,7 @@ package body Wire is
    Timeout : constant unsigned_long := 1;
 
    function RequestFrom (Addr  : Byte;
-                         Quant : Integer;
+                         Quant : Byte;
                          Stop  : Boolean)
                          return Byte
    is
@@ -19,7 +19,7 @@ package body Wire is
       end if;
 
       return RequestFrom_C (Addr  => Addr,
-                            Quant => Quant,
+                            Quant => Integer (Quant),
                             Stop  => CB);
    end RequestFrom;
 

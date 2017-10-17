@@ -1,4 +1,4 @@
-pragma SPARK_Mode;
+--  pragma SPARK_Mode;
 
 with Wire; use Wire;
 
@@ -67,7 +67,6 @@ package body Zumo_LSM303 is
    end Read_A_Status;
 
    procedure Read_Mag (Data : out Axis_Data)
-     with SPARK_Mode => Off
    is
       Reg_Arr : constant array (Axises) of Reg_Index := (OUT_X_L_M,
                                                          OUT_Y_L_M,
@@ -91,7 +90,6 @@ package body Zumo_LSM303 is
    end Read_Mag;
 
    procedure Read_Acc (Data : out Axis_Data)
-     with SPARK_Mode => Off
    is
       Raw_Arr : Byte_Array (1 .. Data'Length * 2)
         with Address => Data'Address;
@@ -102,7 +100,6 @@ package body Zumo_LSM303 is
    end Read_Acc;
 
    function Read_Temp return short
-     with SPARK_Mode => Off
    is
       Arr     : Byte_Array (1 .. 2) := (others => 0);
 
