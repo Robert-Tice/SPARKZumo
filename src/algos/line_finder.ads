@@ -18,7 +18,7 @@ private
    type RobotLineState is
      (Lost, Online, BranchRight, BranchLeft, Fork, Perp);
 
-   Default_Speed : constant Motor_Speed := Motor_Speed'Last;
+   Default_Speed : Motor_Speed := Motor_Speed'Last;
 
    procedure ReadLine (Sensor_Values : out Sensor_Array;
                        WhiteLine     : Boolean;

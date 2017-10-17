@@ -25,9 +25,11 @@ package body Line_Finder is
          when BranchLeft =>
             Offline_Offset := 0;
             Error := Robot_Position'First;
+            Default_Speed := Motor_Speed'Last - 50;
          when BranchRight =>
             Offline_Offset := 0;
             Error := Robot_Position'Last;
+            Default_Speed := Motor_Speed'Last - 50;
          when Perp | Fork =>
             Offline_Offset := 0;
             if LastValue < Integer ((QTR'Length - 1) *
@@ -37,8 +39,10 @@ package body Line_Finder is
             else
                Error := Robot_Position'Last;
             end if;
+            Default_Speed := Motor_Speed'Last - 50;
          when Online =>
             Offline_Offset := 0;
+            Default_Speed := Motor_Speed'Last;
       end case;
 
       Error_Correct (Error      => Error,
