@@ -16,7 +16,6 @@ package Wire is
                             Rx_NACK_Data  => 3,
                             Other_Err     => 4);
 
-
    function Byte2TSI (BB : Byte)
                       return Transmission_Status_Index;
 

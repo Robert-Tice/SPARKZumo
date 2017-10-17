@@ -22,7 +22,7 @@ package body Line_Finder is
       if not On_Line then
          Offline_Correction (Error => Error);
       else
-         Offline_Offset := Natural'First;
+         Offline_Offset := 0;
       end if;
 
       Error_Correct (Error      => Error,
@@ -84,6 +84,11 @@ package body Line_Finder is
 
       if Sum /= 0 then
          LastValue := Integer (Avg / Sum);
+
+         if LastValue > Robot_Position'Last * 2 then
+            LastValue := Robot_Position'Last * 2;
+         end if;
+
          Bot_Pos := Natural (LastValue) - Robot_Position'Last;
       else
          Bot_Pos := Robot_Position'First;
@@ -93,24 +98,15 @@ package body Line_Finder is
 
    procedure Offline_Correction (Error : in out Robot_Position)
    is
-      Error_Unsat : Integer;
    begin
 
-      if Error < 0 then
-         Error_Unsat := Error + Offline_Offset;
-      else
-         Error_Unsat := Error - Offline_Offset;
+      if Error = Robot_Position'First then
+         Error := Error + Offline_Offset;
+      elsif Error = Robot_Position'Last then
+         Error := Error - Offline_Offset;
       end if;
 
-      if Error_Unsat > Robot_Position'Last then
-         Error := Robot_Position'Last;
-      elsif Error_Unsat < Robot_Position'First then
-         Error := Robot_Position'First;
-      else
-         Error := Error_Unsat;
-      end if;
-
-      if Offline_Offset = Natural'Last then
+      if Offline_Offset = (Robot_Position'Last * 2) then
          Offline_Offset := 0;
       else
          Offline_Offset := Offline_Offset + Offline_Inc;

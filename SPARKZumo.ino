@@ -6,6 +6,11 @@ extern "C" {
 	#include <b__sparkzumo.h>
 	#include <sparkzumo.h>
 
+	void __gnat_last_chance_handler(void* msg, int line)
+	{
+		__gnat_last_chance_handler_impl (msg, __FILE__, __func__, __LINE__);
+	}
+
 	void __gnat_last_chance_handler_impl(void* msg, const char* file, const char* func, int line)
 	{
 		Serial.println("Exception(");
@@ -34,7 +39,6 @@ extern "C" {
 void Serial_Print(void* msg) 
 { 
 	Serial.println(reinterpret_cast<char*>(msg));
-//	Serial.flush();
 }
 
 void Serial_Print_Byte(void* msg, uint8_t val) 
@@ -42,7 +46,6 @@ void Serial_Print_Byte(void* msg, uint8_t val)
 	Serial.print(reinterpret_cast<char*>(msg));
 	Serial.print(": ");
 	Serial.println(val);
-//	Serial.flush();
 }
 
 void Serial_Print_Short(void* msg, int16_t val) 
@@ -50,7 +53,6 @@ void Serial_Print_Short(void* msg, int16_t val)
 	Serial.print(reinterpret_cast<char*>(msg));
 	Serial.print(": ");
 	Serial.println(val);
-//	Serial.flush();
 }
 
 void Serial_Print_Float(void* msg, float val) 
@@ -58,7 +60,6 @@ void Serial_Print_Float(void* msg, float val)
 	Serial.print(reinterpret_cast<char*>(msg));
 	Serial.print(": ");
 	Serial.println(val);
-//	Serial.flush();
 }
 
 void Serial_Print_Calibration(int i, int min, int max)

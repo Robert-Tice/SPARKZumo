@@ -127,9 +127,9 @@ typedef wide_wide_character *wide_wide_string;
 typedef integer_32 duration;
 
 typedef void *_void_ptr;
-//extern void __gnat_last_chance_handler (const _void_ptr msg, integer line);
-extern void __gnat_last_chance_handler_impl(void* msg, const char* file, const char* func, int line);
-#define __gnat_last_chance_handler(msg, line) __gnat_last_chance_handler_impl(msg, __FILE__, __func__, __LINE__)
+extern void __gnat_last_chance_handler (const _void_ptr msg, integer line);
+//extern void __gnat_last_chance_handler_impl(const _void_ptr msg, const char* file, const char* func, int line);
+//#define __gnat_last_chance_handler(msg, line) __gnat_last_chance_handler_impl(msg, __FILE__, __func__, __LINE__)
 
 /* Fat pointer of unidimensional unconstrained arrays */
 typedef struct {

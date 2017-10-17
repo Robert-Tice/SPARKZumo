@@ -32,7 +32,7 @@ package body Zumo_LSM303 is
                                            Regs (CTRL6), 2#0010_0000#,
                                            Regs (CTRL7), 2#0000_0000#);
       Status     : Wire.Transmission_Status_Index;
-      Index : Integer := Init_Seq'First;
+      Index : Byte := Init_Seq'First;
    begin
       Check_WHOAMI;
 
@@ -67,6 +67,7 @@ package body Zumo_LSM303 is
    end Read_A_Status;
 
    procedure Read_Mag (Data : out Axis_Data)
+     with SPARK_Mode => Off
    is
       Reg_Arr : constant array (Axises) of Reg_Index := (OUT_X_L_M,
                                                          OUT_Y_L_M,
@@ -90,6 +91,7 @@ package body Zumo_LSM303 is
    end Read_Mag;
 
    procedure Read_Acc (Data : out Axis_Data)
+     with SPARK_Mode => Off
    is
       Raw_Arr : Byte_Array (1 .. Data'Length * 2)
         with Address => Data'Address;
@@ -100,6 +102,7 @@ package body Zumo_LSM303 is
    end Read_Acc;
 
    function Read_Temp return short
+     with SPARK_Mode => Off
    is
       Arr     : Byte_Array (1 .. 2) := (others => 0);
 
