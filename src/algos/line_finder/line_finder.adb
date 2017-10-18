@@ -6,6 +6,16 @@ with Zumo_QTR;
 
 package body Line_Finder is
 
+   Noise_Threshold : constant := Timeout / 10;
+   Line_Threshold  : constant := Timeout / 2;
+
+   Offline_Inc     : constant := 1;
+
+   Fast_Speed      : constant := Motor_Speed'Last - 150;
+   Slow_Speed      : constant := Fast_Speed / 2;
+
+   CorrectedThreshold : constant := 5;
+
    procedure LineFinder (ReadMode : Sensor_Read_Mode)
    is
       Error    : Robot_Position;
@@ -13,10 +23,10 @@ package body Line_Finder is
       LeftSpeed, RightSpeed, Current_Speed : Motor_Speed;
       Line_State                            : LineState;
    begin
-      ReadLine (WhiteLine     => True,
-                ReadMode      => ReadMode,
-                Line_State     => Line_State,
-                Bot_Pos       => Error);
+      ReadLine (WhiteLine  => True,
+                ReadMode   => ReadMode,
+                Line_State => Line_State,
+                Bot_Pos    => Error);
 
       DecisionMatrix (State     => Line_State,
                       Pos       => Error,
@@ -71,7 +81,7 @@ package body Line_Finder is
       end loop;
 
       if Line_State = Lost then
-         case LastOrientation is
+         case BotState.OrientationHistory is
             when Left | Center =>
                Bot_Pos := Robot_Position'First;
             when Right =>
@@ -80,23 +90,24 @@ package body Line_Finder is
 
       else
          if Sum /= 0 then
-            LastValue := Integer (Avg / Sum);
+            BotState.SensorValueHistory := Integer (Avg / Sum);
 
-            if LastValue > Robot_Position'Last * 2 then
-               LastValue := Robot_Position'Last * 2;
+            if BotState.SensorValueHistory > Robot_Position'Last * 2 then
+               BotState.SensorValueHistory := Robot_Position'Last * 2;
             end if;
 
-            Bot_Pos := Natural (LastValue) - Robot_Position'Last;
+            Bot_Pos := Natural (BotState.SensorValueHistory) -
+              Robot_Position'Last;
 
             if Bot_Pos < 0 then
-               LastOrientation := Left;
+               BotState.OrientationHistory := Left;
             elsif Bot_Pos > 0 then
-               LastOrientation := Right;
+               BotState.OrientationHistory := Right;
             else
-               LastOrientation := Center;
+               BotState.OrientationHistory := Center;
             end if;
 
-            Line_State := CalculateLineState (D => LineDetect);
+            BotState.LineHistory := CalculateLineState (D => LineDetect);
          else
             Bot_Pos := Robot_Position'First;
             Line_State := Lost;
@@ -117,26 +128,26 @@ package body Line_Finder is
             BaseSpeed := Fast_Speed;
 
             Zumo_LED.Yellow_Led (On => False);
-            CorrectionCounter := 0;
+            BotState.CorrectionCounter := 0;
 
          when BranchLeft =>
-            Offline_Offset := 0;
+            BotState.Offline_Offset := 0;
             Pos := Robot_Position'First;
             BaseSpeed := Slow_Speed;
 
             Zumo_LED.Yellow_Led (On => False);
-            CorrectionCounter := 0;
+            BotState.CorrectionCounter := 0;
          when BranchRight =>
-            Offline_Offset := 0;
+            BotState.Offline_Offset := 0;
             Pos := Robot_Position'Last;
             BaseSpeed := Slow_Speed;
 
             Zumo_LED.Yellow_Led (On => False);
-            CorrectionCounter := 0;
+            BotState.CorrectionCounter := 0;
          when Perp | Fork =>
-            Offline_Offset := 0;
+            BotState.Offline_Offset := 0;
 
-            case LastOrientation is
+            case BotState.OrientationHistory is
                when Left | Center =>
                   Pos := Robot_Position'First;
                when Right =>
@@ -145,12 +156,12 @@ package body Line_Finder is
 
             BaseSpeed := Slow_Speed;
             Zumo_LED.Yellow_Led (On => False);
-            CorrectionCounter := 0;
+            BotState.CorrectionCounter := 0;
          when Online =>
-            Offline_Offset := 0;
+            BotState.Offline_Offset := 0;
 
-            if CorrectionCounter < CorrectedThreshold then
-               CorrectionCounter := CorrectionCounter + 1;
+            if BotState.CorrectionCounter < CorrectedThreshold then
+               BotState.CorrectionCounter := BotState.CorrectionCounter + 1;
                BaseSpeed := Slow_Speed;
             else
                Zumo_LED.Yellow_Led (On => True);
@@ -158,7 +169,7 @@ package body Line_Finder is
             end if;
       end case;
 
-      LastState := State;
+      BotState.LineHistory := State;
    end DecisionMatrix;
 
    procedure Offline_Correction (Error : in out Robot_Position)
@@ -166,12 +177,12 @@ package body Line_Finder is
    begin
 
       if Error < 0 then
-         Error := Error + Offline_Offset;
+         Error := Error + BotState.Offline_Offset;
       else
-         Error := Error - Offline_Offset;
+         Error := Error - BotState.Offline_Offset;
       end if;
 
-      Offline_Offset := Offline_Offset + Offline_Inc;
+      BotState.Offline_Offset := BotState.Offline_Offset + Offline_Inc;
 
    end Offline_Correction;
 
@@ -185,9 +196,10 @@ package body Line_Finder is
 
       SpeedDifference : Integer;
    begin
-      SpeedDifference := Error / Inv_Prop + Deriv * (Error - LastError);
+      SpeedDifference := Error / Inv_Prop + Deriv *
+        (Error - BotState.ErrorHistory);
 
-      LastError := Error;
+      BotState.ErrorHistory := Error;
 
       if SpeedDifference > Motor_Speed'Last then
          SpeedDifference := Current_Speed;
