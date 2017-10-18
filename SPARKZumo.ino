@@ -22,13 +22,8 @@ extern "C" {
 		Serial.print("): ");
 		Serial.println((char*)msg);
 
-		pinMode(YELLOW_LED, OUTPUT);
-		while(1) {
-			digitalWrite(YELLOW_LED, HIGH);
-			delay(500);
-			digitalWrite(YELLOW_LED, LOW);
-			delay(500);
-		}
+
+		sparkzumo__exception_handler();		
 	}
 
 

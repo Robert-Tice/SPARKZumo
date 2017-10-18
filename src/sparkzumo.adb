@@ -17,11 +17,11 @@ package body SPARKZumo is
       for I in 1 .. 4 loop
          case I is
             when 1 | 3 =>
-               Zumo_Motors.SetSpeed (LeftVelocity  => Motor_Speed'First / 2,
-                                     RightVelocity => Motor_Speed'Last / 2);
+               Zumo_Motors.SetSpeed (LeftVelocity  => Motor_Speed'First / 3,
+                                     RightVelocity => Motor_Speed'Last / 3);
             when others =>
-               Zumo_Motors.SetSpeed (LeftVelocity  => Motor_Speed'Last / 2,
-                                     RightVelocity => Motor_Speed'First / 2);
+               Zumo_Motors.SetSpeed (LeftVelocity  => Motor_Speed'Last / 3,
+                                     RightVelocity => Motor_Speed'First / 3);
          end case;
 
          for J in 1 .. 80 loop
@@ -70,5 +70,19 @@ package body SPARKZumo is
       Line_Finder.LineFinder (ReadMode => ReadMode);
 
    end WorkLoop;
+
+   procedure Exception_Handler
+   is
+   begin
+      Zumo_Motors.SetSpeed (LeftVelocity  => Stop,
+                            RightVelocity => Stop);
+
+      loop
+         Zumo_LED.Yellow_Led (On => True);
+         SysDelay (Time => 500);
+         Zumo_LED.Yellow_Led (On => False);
+         SysDelay (Time => 500);
+      end loop;
+   end Exception_Handler;
 
 end SPARKZumo;

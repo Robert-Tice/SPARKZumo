@@ -1,5 +1,6 @@
 with Interfaces.C; use Interfaces.C;
 
+with Zumo_LED;
 with Zumo_Motors;
 with Zumo_QTR;
 
@@ -7,68 +8,45 @@ package body Line_Finder is
 
    procedure LineFinder (ReadMode : Sensor_Read_Mode)
    is
-      QTR      : Sensor_Array;
       Error    : Robot_Position;
 
-      LeftSpeed, RightSpeed : Motor_Speed;
-      Bot_State             : RobotLineState;
+      LeftSpeed, RightSpeed, Current_Speed : Motor_Speed;
+      Line_State                            : LineState;
    begin
-      ReadLine (Sensor_Values => QTR,
-                WhiteLine     => True,
+      ReadLine (WhiteLine     => True,
                 ReadMode      => ReadMode,
-                Bot_State     => Bot_State,
+                Line_State     => Line_State,
                 Bot_Pos       => Error);
 
-      case Bot_State is
-         when Lost =>
-            Offline_Correction (Error => Error);
-         when BranchLeft =>
-            Offline_Offset := 0;
-            Error := Robot_Position'First;
-            Default_Speed := Motor_Speed'Last - 50;
-         when BranchRight =>
-            Offline_Offset := 0;
-            Error := Robot_Position'Last;
-            Default_Speed := Motor_Speed'Last - 50;
-         when Perp | Fork =>
-            Offline_Offset := 0;
-            if LastValue < Integer ((QTR'Length - 1) *
-                                      QTR'Last / 2)
-            then
-               Error := Robot_Position'First;
-            else
-               Error := Robot_Position'Last;
-            end if;
-            Default_Speed := Motor_Speed'Last - 50;
-         when Online =>
-            Offline_Offset := 0;
-            Default_Speed := Motor_Speed'Last;
-      end case;
+      DecisionMatrix (State     => Line_State,
+                      Pos       => Error,
+                      BaseSpeed => Current_Speed);
 
-      Error_Correct (Error      => Error,
-                     LeftSpeed  => LeftSpeed,
-                     RightSpeed => RightSpeed);
+      Error_Correct (Error         => Error,
+                     Current_Speed => Current_Speed,
+                     LeftSpeed     => LeftSpeed,
+                     RightSpeed    => RightSpeed);
 
       Zumo_Motors.SetSpeed (LeftVelocity  => LeftSpeed,
                             RightVelocity => RightSpeed);
    end LineFinder;
 
-   procedure ReadLine (Sensor_Values : out Sensor_Array;
-                       WhiteLine     : Boolean;
-                       ReadMode      : Sensor_Read_Mode;
-                       Bot_State     : out RobotLineState;
-                       Bot_Pos       : out Robot_Position)
+   procedure ReadLine (WhiteLine      : Boolean;
+                       ReadMode       : Sensor_Read_Mode;
+                       Line_State     : out LineState;
+                       Bot_Pos        : out Robot_Position)
    is
       Avg     : long := 0;
       Sum     : long := 0;
       Value   : Sensor_Value;
 
+      Sensor_Values : Sensor_Array;
       LineDetect : Boolean_Array (Sensor_Values'First .. Sensor_Values'Last);
    begin
       Zumo_QTR.ReadCalibrated (Sensor_Values => Sensor_Values,
                                ReadMode      => ReadMode);
 
-      Bot_State := Lost;
+      Line_State := Lost;
 
       for I in Sensor_Values'Range loop
          Value := Sensor_Values (I);
@@ -78,7 +56,7 @@ package body Line_Finder is
 
          --  keep track of whether we see the line at all
          if Value > Line_Threshold then
-            Bot_State := Online;
+            Line_State := Online;
             LineDetect (I) := True;
          else
             LineDetect (I) := False;
@@ -92,16 +70,13 @@ package body Line_Finder is
          end if;
       end loop;
 
-      if Bot_State = Lost then
-         if LastValue < Integer ((Sensor_Values'Length - 1) *
-                                   Sensor_Value'Last / 2)
-         then
-            Bot_Pos := Robot_Position'First;
-            return;
-         else
-            Bot_Pos := Robot_Position'Last;
-            return;
-         end if;
+      if Line_State = Lost then
+         case LastOrientation is
+            when Left | Center =>
+               Bot_Pos := Robot_Position'First;
+            when Right =>
+               Bot_Pos := Robot_Position'Last;
+         end case;
 
       else
          if Sum /= 0 then
@@ -112,14 +87,79 @@ package body Line_Finder is
             end if;
 
             Bot_Pos := Natural (LastValue) - Robot_Position'Last;
-            Bot_State := CalculateBotState (D => LineDetect);
+
+            if Bot_Pos < 0 then
+               LastOrientation := Left;
+            elsif Bot_Pos > 0 then
+               LastOrientation := Right;
+            else
+               LastOrientation := Center;
+            end if;
+
+            Line_State := CalculateLineState (D => LineDetect);
          else
             Bot_Pos := Robot_Position'First;
-            Bot_State := Lost;
+            Line_State := Lost;
          end if;
       end if;
 
    end ReadLine;
+
+   procedure DecisionMatrix (State : LineState;
+                             Pos   : in out Robot_Position;
+                             BaseSpeed : out Motor_Speed)
+   is
+   begin
+      case State is
+         when Lost =>
+
+            Offline_Correction (Error => Pos);
+            BaseSpeed := Fast_Speed;
+
+            Zumo_LED.Yellow_Led (On => False);
+            CorrectionCounter := 0;
+
+         when BranchLeft =>
+            Offline_Offset := 0;
+            Pos := Robot_Position'First;
+            BaseSpeed := Slow_Speed;
+
+            Zumo_LED.Yellow_Led (On => False);
+            CorrectionCounter := 0;
+         when BranchRight =>
+            Offline_Offset := 0;
+            Pos := Robot_Position'Last;
+            BaseSpeed := Slow_Speed;
+
+            Zumo_LED.Yellow_Led (On => False);
+            CorrectionCounter := 0;
+         when Perp | Fork =>
+            Offline_Offset := 0;
+
+            case LastOrientation is
+               when Left | Center =>
+                  Pos := Robot_Position'First;
+               when Right =>
+                  Pos := Robot_Position'Last;
+            end case;
+
+            BaseSpeed := Slow_Speed;
+            Zumo_LED.Yellow_Led (On => False);
+            CorrectionCounter := 0;
+         when Online =>
+            Offline_Offset := 0;
+
+            if CorrectionCounter < CorrectedThreshold then
+               CorrectionCounter := CorrectionCounter + 1;
+               BaseSpeed := Slow_Speed;
+            else
+               Zumo_LED.Yellow_Led (On => True);
+               BaseSpeed := Fast_Speed;
+            end if;
+      end case;
+
+      LastState := State;
+   end DecisionMatrix;
 
    procedure Offline_Correction (Error : in out Robot_Position)
    is
@@ -135,9 +175,10 @@ package body Line_Finder is
 
    end Offline_Correction;
 
-   procedure Error_Correct (Error : Robot_Position;
-                            LeftSpeed : out Motor_Speed;
-                            RightSpeed : out Motor_Speed)
+   procedure Error_Correct (Error         : Robot_Position;
+                            Current_Speed : Motor_Speed;
+                            LeftSpeed     : out Motor_Speed;
+                            RightSpeed    : out Motor_Speed)
    is
       Inv_Prop              : constant := 8;
       Deriv                 : constant := 2;
@@ -149,23 +190,23 @@ package body Line_Finder is
       LastError := Error;
 
       if SpeedDifference > Motor_Speed'Last then
-         SpeedDifference := Default_Speed;
+         SpeedDifference := Current_Speed;
       elsif SpeedDifference < Motor_Speed'First then
-         SpeedDifference := Default_Speed;
+         SpeedDifference := Current_Speed;
       end if;
 
       if SpeedDifference < 0 then
-         LeftSpeed := Default_Speed + Motor_Speed (SpeedDifference);
-         RightSpeed := Default_Speed;
+         LeftSpeed := Current_Speed + Motor_Speed (SpeedDifference);
+         RightSpeed := Current_Speed;
       else
-         LeftSpeed := Default_Speed;
-         RightSpeed := Default_Speed - Motor_Speed (SpeedDifference);
+         LeftSpeed := Current_Speed;
+         RightSpeed := Current_Speed - Motor_Speed (SpeedDifference);
       end if;
 
    end Error_Correct;
 
-   function CalculateBotState (D : Boolean_Array)
-                               return RobotLineState
+   function CalculateLineState (D : Boolean_Array)
+                               return LineState
    is
       LB : Boolean := True;
       RB : Boolean := True;
@@ -205,6 +246,6 @@ package body Line_Finder is
       end if;
 
       return Lost;
-   end CalculateBotState;
+   end CalculateLineState;
 
 end Line_Finder;

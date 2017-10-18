@@ -12,20 +12,34 @@ private
    LastValue : Integer := 0;
    LastError : Integer := 0;
 
+   CorrectedThreshold : constant := 5;
+   CorrectionCounter : Natural := 0;
+
    Noise_Threshold : constant := Timeout / 10;
    Line_Threshold : constant := Timeout / 2;
 
-   type RobotLineState is
+   type LineState is
      (Lost, Online, BranchRight, BranchLeft, Fork, Perp);
 
-   Default_Speed : Motor_Speed := Motor_Speed'Last;
+   LastState : LineState := Online;
 
-   procedure ReadLine (Sensor_Values : out Sensor_Array;
-                       WhiteLine     : Boolean;
+   type BotOrientation is
+     (Left, Center, Right);
+
+   LastOrientation : BotOrientation := Center;
+
+   Fast_Speed : constant Motor_Speed := Motor_Speed'Last - 80;
+   Slow_Speed    : constant Motor_Speed := Fast_Speed / 3;
+
+   procedure ReadLine (WhiteLine     : Boolean;
                        ReadMode      : Sensor_Read_Mode;
-                       Bot_State     : out RobotLineState;
+                       Line_State     : out LineState;
                        Bot_Pos       : out Robot_Position)
      with Global => (In_Out => LastValue);
+
+   procedure DecisionMatrix (State     : LineState;
+                             Pos       : in out Robot_Position;
+                             BaseSpeed : out Motor_Speed);
 
    Offline_Inc : constant := 1;
 
@@ -35,16 +49,11 @@ private
                  Offline_Offset => (Offline_Offset)),
      Post => Offline_Offset = Offline_Offset'Old + Offline_Inc;
 
-   procedure Error_Correct (Error      : Robot_Position;
-                            LeftSpeed  : out Motor_Speed;
-                            RightSpeed : out Motor_Speed)
-     with Global => (Input  => Default_Speed,
-                     In_Out => LastError),
-     Depends => (LeftSpeed  => (Error, LastError, Default_Speed),
-                 RightSpeed => (Error, LastError, Default_Speed),
-                 LastError  => (Error, LastError)),
-     Post => (LastError = Error);
+   procedure Error_Correct (Error         : Robot_Position;
+                            Current_Speed : Motor_Speed;
+                            LeftSpeed     : out Motor_Speed;
+                            RightSpeed    : out Motor_Speed);
 
-   function CalculateBotState (D : Boolean_Array) return RobotLineState;
+   function CalculateLineState (D : Boolean_Array) return LineState;
 
 end Line_Finder;

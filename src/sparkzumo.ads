@@ -27,4 +27,6 @@ private
  --    Pre => not Initd,
  --    Post => Initd;
 
+   procedure Exception_Handler;
+
 end SPARKZumo;
