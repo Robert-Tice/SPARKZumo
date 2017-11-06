@@ -26,7 +26,6 @@ package body Zumo_LED is
          DigitalWrite (Pin => YellowLEDPin,
                        Val => DigPinValue'Pos (LOW));
       end if;
-      State := On;
    end Yellow_Led;
 
 end Zumo_LED;

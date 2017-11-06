@@ -11,9 +11,6 @@ package body Zumo_QTR is
    SensorPins : constant array (1 .. 6) of unsigned_char :=
                   (4, A3, 11, A0, A2, 5);
 
-   Calibrated_On : Boolean := False;
-   Calibrated_Off : Boolean := False;
-
    Capacitor_Charge : constant := 5;
 
    procedure Init
@@ -152,11 +149,19 @@ package body Zumo_QTR is
          when Emitters_On =>
             Calibrate_Private (Cal_Vals => Cal_Vals_On,
                                ReadMode => ReadMode);
+            Cal_Vals_Off := (others =>
+                                Calibration'(Min => Sensor_Value'Last,
+                                             Max => Sensor_Value'First));
             Calibrated_On := True;
+            Calibrated_Off := False;
          when Emitters_Off =>
             Calibrate_Private (Cal_Vals => Cal_Vals_Off,
                                ReadMode => ReadMode);
+
+            Cal_Vals_On := (others => Calibration'(Min => Sensor_Value'Last,
+                                                   Max => Sensor_Value'First));
             Calibrated_Off := True;
+            Calibrated_On := False;
          when Emitters_On_Off =>
             Calibrate_Private (Cal_Vals => Cal_Vals_On,
                                ReadMode => ReadMode);
@@ -203,7 +208,7 @@ package body Zumo_QTR is
       CalMin : Sensor_Value;
       CalMax : Sensor_Value;
       Denom  : Sensor_Value;
-      X      : Integer;
+      X      : long;
    begin
       Read_Sensors (Sensor_Values => Sensor_Values,
                     ReadMode      => ReadMode);
@@ -266,16 +271,16 @@ package body Zumo_QTR is
          if CalMin < CalMax then
             Denom := CalMax - CalMin;
 
-            X := Integer (long (Sensor_Values (I) - CalMin) *
-                            long (Sensor_Value'Last) / long (Denom));
+            X := long (Sensor_Values (I) - CalMin) *
+                            long (Sensor_Value'Last) / long (Denom);
 
-            if X < Integer (Sensor_Value'First) then
-               X := Integer (Sensor_Value'First);
-            elsif X > Integer (Sensor_Value'Last) then
-               X := Integer (Sensor_Value'Last);
+            if X < long (Sensor_Value'First) then
+               Sensor_Values (I) := Sensor_Value'First;
+            elsif X > long (Sensor_Value'Last) then
+               Sensor_Values (I) := Sensor_Value'Last;
+            else
+               Sensor_Values (I) := Sensor_Value (X);
             end if;
-
-            Sensor_Values (I) := Sensor_Value (X);
 
          end if;
       end loop;

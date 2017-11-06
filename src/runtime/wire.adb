@@ -62,14 +62,14 @@ package body Wire is
       Status := Byte2TSI (BB => Wire.EndTransmission (Stop => True));
 
       if Status /= Wire.Success or Bytes_Written /= 1 then
-         raise Wire_Exception;
+         return Byte'First;
       end if;
 
       Bytes_Read := RequestFrom (Addr  => Addr,
                                  Quant => 1,
                                  Stop  => True);
       if Bytes_Read /= 1 then
-         raise Wire_Exception;
+         return Byte'First;
       end if;
 
       Ret_Val := Wire.Read;
@@ -93,7 +93,7 @@ package body Wire is
       Status := Byte2TSI (BB => Wire.EndTransmission (Stop => True));
 
       if Status /= Wire.Success or Bytes_Written /= 1 then
-         Data := (others => Byte'Last);
+         Data := (others => Byte'First);
          return;
       end if;
 
@@ -102,7 +102,7 @@ package body Wire is
                                  Stop  => True);
 
       if Bytes_Read /= Data'Length or Bytes_Read = 0 then
-         Data := (others => Byte'Last);
+         Data := (others => Byte'First);
          return;
       end if;
 
@@ -110,13 +110,17 @@ package body Wire is
 
       while Wire.Available < Data'Length loop
          if Millis - Start_Time > Timeout then
-            Data := (others => Byte'Last);
+            Data := (others => Byte'First);
             return;
          end if;
       end loop;
 
-      for I in Data'Range loop
+      for I in Data'First .. Data'Last loop
          Data (I) := Wire.Read;
+         pragma Annotate (GNATprove,
+                          False_Positive,
+                          """Data"" might not be initialized",
+                          String'("Data properly initialized by this loop"));
       end loop;
    end Read_Bytes;
 

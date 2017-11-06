@@ -1,15 +1,11 @@
-with Interfaces.C; use Interfaces.C;
+pragma SPARK_Mode;
 
-with Zumo_LED;
-with Zumo_Motors;
-with Zumo_QTR;
+with Interfaces.C; use Interfaces.C;
 
 package body Line_Finder is
 
    Noise_Threshold : constant := Timeout / 10;
    Line_Threshold  : constant := Timeout / 2;
-
-   Offline_Inc     : constant := 1;
 
    Fast_Speed      : constant := Motor_Speed'Last - 150;
    Slow_Speed      : constant := Fast_Speed / 2;
@@ -131,22 +127,18 @@ package body Line_Finder is
             BotState.CorrectionCounter := 0;
 
          when BranchLeft =>
-            BotState.Offline_Offset := 0;
             Pos := Robot_Position'First;
             BaseSpeed := Slow_Speed;
 
             Zumo_LED.Yellow_Led (On => False);
             BotState.CorrectionCounter := 0;
          when BranchRight =>
-            BotState.Offline_Offset := 0;
             Pos := Robot_Position'Last;
             BaseSpeed := Slow_Speed;
 
             Zumo_LED.Yellow_Led (On => False);
             BotState.CorrectionCounter := 0;
          when Perp | Fork =>
-            BotState.Offline_Offset := 0;
-
             case BotState.OrientationHistory is
                when Left | Center =>
                   Pos := Robot_Position'First;
@@ -158,8 +150,6 @@ package body Line_Finder is
             Zumo_LED.Yellow_Led (On => False);
             BotState.CorrectionCounter := 0;
          when Online =>
-            BotState.Offline_Offset := 0;
-
             if BotState.CorrectionCounter < CorrectedThreshold then
                BotState.CorrectionCounter := BotState.CorrectionCounter + 1;
                BaseSpeed := Slow_Speed;
@@ -174,15 +164,21 @@ package body Line_Finder is
 
    procedure Offline_Correction (Error : in out Robot_Position)
    is
+      Saturate : Integer;
    begin
-
-      if Error < 0 then
-         Error := Error + BotState.Offline_Offset;
+      if Error = Robot_Position'First then
+         Error := Error + 1;
+      elsif Error = Robot_Position'Last then
+         Error := Error - 1;
       else
-         Error := Error - BotState.Offline_Offset;
-      end if;
+         Saturate := BotState.ErrorHistory + 1;
 
-      BotState.Offline_Offset := BotState.Offline_Offset + Offline_Inc;
+         if Saturate > Robot_Position'Last then
+            Error := Robot_Position'First;
+         else
+            Error := Saturate;
+         end if;
+      end if;
 
    end Offline_Correction;
 
@@ -195,6 +191,8 @@ package body Line_Finder is
       Deriv                 : constant := 2;
 
       SpeedDifference : Integer;
+
+      Saturate_Speed : Integer;
    begin
       SpeedDifference := Error / Inv_Prop + Deriv *
         (Error - BotState.ErrorHistory);
@@ -208,11 +206,26 @@ package body Line_Finder is
       end if;
 
       if SpeedDifference < 0 then
-         LeftSpeed := Current_Speed + Motor_Speed (SpeedDifference);
+         Saturate_Speed := Current_Speed + Motor_Speed (SpeedDifference);
+         if Saturate_Speed > Motor_Speed'Last then
+            LeftSpeed := Motor_Speed'Last;
+         elsif Saturate_Speed < Motor_Speed'First then
+            LeftSpeed := Motor_Speed'First;
+         else
+            LeftSpeed := Saturate_Speed;
+         end if;
          RightSpeed := Current_Speed;
       else
          LeftSpeed := Current_Speed;
-         RightSpeed := Current_Speed - Motor_Speed (SpeedDifference);
+
+         Saturate_Speed := Current_Speed - Motor_Speed (SpeedDifference);
+         if Saturate_Speed > Motor_Speed'Last then
+            RightSpeed := Motor_Speed'Last;
+         elsif Saturate_Speed < Motor_Speed'First then
+            RightSpeed := Motor_Speed'First;
+         else
+            RightSpeed := Saturate_Speed;
+         end if;
       end if;
 
    end Error_Correct;
@@ -225,16 +238,17 @@ package body Line_Finder is
 
       LL : Boolean := False;
    begin
-      for I in D'First .. D'Last / 2 loop
-         if not D (I) then
+
+      for I in 0 .. D'Length / 2 loop
+         if not D (D'First + I) then
             LB := False;
          else
             LL := True;
          end if;
       end loop;
 
-      for I in D'Last / 2 .. D'Last loop
-         if not D (I) then
+      for I in D'Length / 2 .. D'Length - 1 loop
+         if not D (D'First + I) then
             RB := False;
          else
             LL := True;

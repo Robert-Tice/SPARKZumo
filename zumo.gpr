@@ -15,7 +15,7 @@ library project Zumo is
    end Ide;
 
    package Compiler is
-      for Default_Switches ("Ada") use ("-gnatwa", "-gnatg");
+      for Default_Switches ("Ada") use ("-gnatwa", "-gnatg", "-gnatp");
    end Compiler;
 
    package Builder is
@@ -23,7 +23,7 @@ library project Zumo is
    end Builder;
 
    package Prove is
- --     for Switches use ("-v");
+      for Switches use ("-v");
    end Prove;
 
 end Zumo;

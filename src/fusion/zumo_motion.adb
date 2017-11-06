@@ -1,9 +1,5 @@
 --  pragma SPARK_Mode;
 
-with Zumo_LSM303;
-with Zumo_L3gd20h;
-with Wire;
-
 with Ada.Numerics.Long_Elementary_Functions;
 use Ada.Numerics.Long_Elementary_Functions;
 

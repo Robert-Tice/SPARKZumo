@@ -1,12 +1,8 @@
 pragma SPARK_Mode;
 
-with ATmega328P; use ATmega328P;
 with Sparkduino; use Sparkduino;
 
 package body Zumo_Motors is
-
-   FlipLeft : Boolean := False;
-   FlipRight : Boolean := False;
 
    PWM_L : constant := 10;
    PWM_R : constant := 9;

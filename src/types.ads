@@ -7,10 +7,12 @@ package Types is
    type Byte is mod 256
      with Size => 8;
 
+   subtype Byte_Array_Index_Type is Byte range Byte'First .. Byte'Last - 1;
+
    type Word is mod 65536
      with Size => 16;
 
-   type Byte_Array is array (Byte range <>) of Byte
+   type Byte_Array is array (Byte_Array_Index_Type range <>) of Byte
      with Pack;
 
    type Axises is (X, Y, Z);
@@ -45,9 +47,9 @@ package Types is
    type Sensor_Value is new Natural range 0 .. Timeout;
    type Sensor_Array is array (1 .. Num_Sensors) of Sensor_Value;
 
-   subtype Robot_Position is Integer range
-     ((Num_Sensors - 1) * Timeout * (-1) / 2) ..
-       ((Num_Sensors - 1) * Timeout / 2);
+   Robot_Scale : constant := (Num_Sensors - 1) * Timeout / 2;
+
+   subtype Robot_Position is Integer range (-1) * Robot_Scale .. Robot_Scale;
 
    subtype Sensor_Value_Scaled is Float range 0.0 .. 1.0;
    type Sensor_Scaled_Array is array (1 .. 6) of Sensor_Value_Scaled;

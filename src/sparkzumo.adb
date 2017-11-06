@@ -1,11 +1,6 @@
-with Sparkduino; use Sparkduino;
-with Zumo_LED;
-with Zumo_Motion;
-with Zumo_Pushbutton;
-with Zumo_Motors;
-with Zumo_QTR;
+pragma SPARK_Mode;
 
-with Line_Finder;
+with Sparkduino; use Sparkduino;
 
 package body SPARKZumo is
 
@@ -46,7 +41,7 @@ package body SPARKZumo is
 
       Zumo_Motion.Init;
 
-      --    Initd := True;
+      Initd := True;
    end Inits;
 
    procedure Setup

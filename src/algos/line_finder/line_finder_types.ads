@@ -1,3 +1,7 @@
+pragma SPARK_Mode;
+
+with Types; use Types;
+
 package Line_Finder_Types is
 
    type LineState is
@@ -14,9 +18,7 @@ package Line_Finder_Types is
 
       CorrectionCounter  : Natural := 0;
 
-      ErrorHistory       : Integer := 0;
-
-      Offline_Offset     : Natural := 0;
+      ErrorHistory       : Robot_Position := 0;
    end record;
 
 end Line_Finder_Types;

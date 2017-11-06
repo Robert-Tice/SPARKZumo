@@ -5,7 +5,8 @@ package Zumo_Pushbutton is
    Initd : Boolean := False;
 
    procedure Init
-     with Pre => not Initd,
+     with Global => (In_Out => Initd),
+     Pre => not Initd,
      Post => Initd;
 
    function IsPressed return Boolean

@@ -40,6 +40,10 @@ package Wire is
                          Data : out Byte_Array)
      with Global => Transmission_Status,
      Pre => (Data'Length > 0);
+   pragma Annotate (GNATprove,
+                    False_Positive,
+                    """Data"" might not be initialized",
+                    String'("Data is properly initialized by this loop"));
 
    function Write_Byte (Addr : Byte;
                         Reg  : Byte;
