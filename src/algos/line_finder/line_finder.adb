@@ -150,9 +150,7 @@ package body Line_Finder is
                                   RightVelocity => RightSpeed);
       end case;
 
-      if State /= BotState.LineHistory then
-         Serial_Print (Msg => LineStateStr (State));
-      end if;
+      Serial_Print (Msg => LineStateStr (State));
 
       BotState.LineHistory := State;
    end SimpleDecisionMatrix;
