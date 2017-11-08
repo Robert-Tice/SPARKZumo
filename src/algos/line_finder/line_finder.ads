@@ -48,10 +48,18 @@ private
                      In_Out => BotState),
      Pre => (Zumo_LED.Initd);
 
+   procedure SimpleDecisionMatrix (State : LineState;
+                                   Pos   : Robot_Position);
+
    procedure Error_Correct (Error         : Robot_Position;
                             Current_Speed : Motor_Speed;
                             LeftSpeed     : out Motor_Speed;
                             RightSpeed    : out Motor_Speed)
      with Global => (In_Out => (BotState));
+
+   type DecisionType is
+     (Simple, Complex);
+
+   Decision : constant DecisionType := Simple;
 
 end Line_Finder;

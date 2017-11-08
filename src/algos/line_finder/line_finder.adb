@@ -2,7 +2,7 @@ pragma SPARK_Mode;
 
 with Interfaces.C; use Interfaces.C;
 
---  with Geo_Filter;
+with Geo_Filter;
 with Sparkduino; use Sparkduino;
 
 package body Line_Finder is
@@ -23,10 +23,16 @@ package body Line_Finder is
                 Line_State => Line_State,
                 Bot_Pos    => Error);
 
---      Geo_Filter.FilterState (State => Line_State);
+      case Decision is
+         when Simple =>
+            SimpleDecisionMatrix (State => Line_State,
+                                  Pos   => Error);
+         when Complex =>
+            Geo_Filter.FilterState (State => Line_State);
 
-      DecisionMatrix (State     => Line_State,
-                      Pos       => Error);
+            DecisionMatrix (State     => Line_State,
+                            Pos       => Error);
+      end case;
    end LineFinder;
 
    procedure ReadLine (WhiteLine      : Boolean;
@@ -101,6 +107,55 @@ package body Line_Finder is
       end if;
 
    end ReadLine;
+
+   procedure SimpleDecisionMatrix (State : LineState;
+                                   Pos   : Robot_Position)
+   is
+      LeftSpeed : Motor_Speed;
+      RightSpeed : Motor_Speed;
+   begin
+      case State is
+         when Lost =>
+            case BotState.OrientationHistory is
+               when Left | Center =>
+                  LeftSpeed := (-1) * Fast_Speed +
+                    Integer (BotState.OfflineCounter);
+                  RightSpeed := Fast_Speed;
+               when Right =>
+                  LeftSpeed := Fast_Speed;
+                  RightSpeed := (-1) * Fast_Speed +
+                    Integer (BotState.OfflineCounter);
+            end case;
+
+            if BotState.OfflineCounter = OfflineCounterType'Last then
+               BotState.OfflineCounter := OfflineCounterType'First;
+            else
+               BotState.OfflineCounter := BotState.OfflineCounter + 1;
+            end if;
+
+            Zumo_LED.Yellow_Led (On => False);
+
+            Zumo_Motors.SetSpeed (LeftVelocity  => LeftSpeed,
+                                  RightVelocity => RightSpeed);
+         when others =>
+            BotState.OfflineCounter := 0;
+            Zumo_LED.Yellow_Led (On => True);
+
+            Error_Correct (Error         => Pos,
+                           Current_Speed => Fast_Speed,
+                           LeftSpeed     => LeftSpeed,
+                           RightSpeed    => RightSpeed);
+
+            Zumo_Motors.SetSpeed (LeftVelocity  => LeftSpeed,
+                                  RightVelocity => RightSpeed);
+      end case;
+
+      if State /= BotState.LineHistory then
+         Serial_Print (Msg => LineStateStr (State));
+      end if;
+
+      BotState.LineHistory := State;
+   end SimpleDecisionMatrix;
 
    procedure DecisionMatrix (State : LineState;
                              Pos   : Robot_Position)
