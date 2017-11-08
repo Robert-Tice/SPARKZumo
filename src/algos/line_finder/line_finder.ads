@@ -30,10 +30,6 @@ package Line_Finder is
 
 private
 
-   function CalculateLineState (D : Boolean_Array) return LineState
-     with Global => (null),
-     Pre => (D'Length = Sensor_Array'Length);
-
    procedure ReadLine (WhiteLine      : Boolean;
                        ReadMode       : Sensor_Read_Mode;
                        Line_State     : out LineState;
@@ -47,14 +43,10 @@ private
      Pre => (Zumo_QTR.Initd);
 
    procedure DecisionMatrix (State     : LineState;
-                             Pos       : in out Robot_Position;
-                             BaseSpeed : out Motor_Speed)
+                             Pos       : Robot_Position)
      with Global => (Input => (Zumo_LED.Initd),
                      In_Out => BotState),
      Pre => (Zumo_LED.Initd);
-
-   procedure Offline_Correction (Error : in out Robot_Position)
-     with Global => (In_Out => (BotState));
 
    procedure Error_Correct (Error         : Robot_Position;
                             Current_Speed : Motor_Speed;

@@ -19,8 +19,9 @@ package body Wire is
       end if;
 
       return RequestFrom_C (Addr  => Addr,
-                            Quant => Integer (Quant),
+                            Quant => Quant,
                             Stop  => CB);
+
    end RequestFrom;
 
    function EndTransmission (Stop : Boolean) return Byte

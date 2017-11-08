@@ -60,7 +60,7 @@ private
                          return Byte;
 
    function RequestFrom_C (Addr  : Byte;
-                           Quant : Integer;
+                           Quant : Byte;
                            Stop  : Byte)
                            return Byte
      with Global => null;

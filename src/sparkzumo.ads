@@ -18,11 +18,11 @@ with Line_Finder;
 
 package SPARKZumo is
 
-   Initd    : Boolean := False;
+--   Initd    : Boolean := False;
    ReadMode : constant Sensor_Read_Mode := Emitters_On;
 
    procedure WorkLoop
-     with Global => (Input => (Initd,
+     with Global => (Input => ( -- Initd,
                                Zumo_LED.Initd,
                                Zumo_Motors.Initd,
                                Zumo_QTR.Initd,
@@ -35,19 +35,19 @@ package SPARKZumo is
                      In_Out => (Line_Finder.BotState,
                                 Zumo_QTR.Cal_Vals_On,
                                 Zumo_QTR.Cal_Vals_Off)),
-     Pre => (Initd and
+     Pre => ( -- Initd and
                Zumo_LED.Initd and
                  Zumo_Motors.Initd and
                    Zumo_QTR.Initd);
 
    procedure Setup
-     with Pre => (not Initd and
+     with Pre => ( -- not Initd and
                     not Zumo_LED.Initd and
                       not Zumo_Pushbutton.Initd and
                         not Zumo_Motors.Initd and
                           not Zumo_QTR.Initd and
                             not Zumo_Motion.Initd),
-             Post => (Initd and
+             Post => ( -- Initd and
                         Zumo_LED.Initd and
                           Zumo_Pushbutton.Initd and
                             Zumo_Motors.Initd and
@@ -57,7 +57,7 @@ package SPARKZumo is
 private
 
    procedure Calibration_Sequence
-     with Global => (Input => (Initd,
+     with Global => (Input => ( -- Initd,
                                Zumo_Motors.Initd,
                                Zumo_Motors.FlipLeft,
                                Zumo_Motors.FlipRight,
@@ -68,7 +68,7 @@ private
                                 ATmega328P.OCR1B),
                      In_Out => (Zumo_QTR.Cal_Vals_On,
                                 Zumo_QTR.Cal_Vals_Off)),
-     Pre => (Initd and
+     Pre => ( -- Initd and
                Zumo_Motors.Initd and
                  Zumo_QTR.Initd);
 
@@ -77,7 +77,7 @@ private
                      Output => (ATmega328P.TCCR1A,
                                 ATmega328P.TCCR1B,
                                 ATmega328P.ICR1),
-                     In_Out => (Initd,
+                     In_Out => ( -- Initd,
                                 Zumo_LED.Initd,
                                 Zumo_LSM303.Initd,
                                 Zumo_L3gd20h.Initd,
@@ -85,13 +85,13 @@ private
                                 Zumo_Motors.Initd,
                                 Zumo_Pushbutton.Initd,
                                 Zumo_QTR.Initd)),
-     Pre => (not Initd and
+     Pre => ( -- not Initd and
                not Zumo_LED.Initd and
                  not Zumo_Pushbutton.Initd and
                    not Zumo_Motors.Initd and
                      not Zumo_QTR.Initd and
                        not Zumo_Motion.Initd),
-     Post => (Initd and
+     Post => ( -- Initd and
                 Zumo_LED.Initd and
                   Zumo_Pushbutton.Initd and
                     Zumo_Motors.Initd and

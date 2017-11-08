@@ -4,7 +4,7 @@
 
 extern "C" {
 	#include <b__sparkzumo.h>
-	#include <sparkzumo.h>
+	#include <sparkzumo.h>		
 
 	void __gnat_last_chance_handler(void* msg, int line)
 	{
@@ -73,7 +73,7 @@ void Wire_Begin_Master(void)
 void Wire_Begin_Slave(uint8_t addr)
 { Wire.begin(addr); }
 
-int Wire_RequestFrom(uint8_t addr, uint8_t quant, uint8_t stop)
+byte Wire_RequestFrom(uint8_t addr, uint8_t quant, uint8_t stop)
 { return Wire.requestFrom(addr, quant, stop); }
 
 void Wire_BeginTransmission(uint8_t addr)

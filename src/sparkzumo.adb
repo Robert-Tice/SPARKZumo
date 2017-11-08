@@ -1,10 +1,14 @@
 pragma SPARK_Mode;
 
+with Interfaces.C; use Interfaces.C;
+
 with Sparkduino; use Sparkduino;
 
 package body SPARKZumo is
 
    Stop          : constant := 0;
+
+   Sample_Rate : constant := 500;
 
    procedure Calibration_Sequence
    is
@@ -41,7 +45,7 @@ package body SPARKZumo is
 
       Zumo_Motion.Init;
 
-      Initd := True;
+--      Initd := True;
    end Inits;
 
    procedure Setup
@@ -60,9 +64,17 @@ package body SPARKZumo is
 
    procedure WorkLoop
    is
+      Start, Length : unsigned_long;
    begin
+      Start := Millis;
 
       Line_Finder.LineFinder (ReadMode => ReadMode);
+
+      Length := Millis - Start;
+
+      if Length < Sample_Rate then
+         DelayMicroseconds (Time => unsigned (Sample_Rate - Length) * 100);
+      end if;
 
    end WorkLoop;
 
