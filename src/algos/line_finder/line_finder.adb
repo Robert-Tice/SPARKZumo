@@ -2,9 +2,6 @@ pragma SPARK_Mode;
 
 with Interfaces.C; use Interfaces.C;
 
-with Geo_Filter;
-with Sparkduino; use Sparkduino;
-
 package body Line_Finder is
 
    Noise_Threshold : constant := Timeout / 10;
@@ -23,7 +20,7 @@ package body Line_Finder is
                 Line_State => Line_State,
                 Bot_Pos    => Error);
 
-      case Decision is
+      case BotState.Decision is
          when Simple =>
             SimpleDecisionMatrix (State => Line_State,
                                   Pos   => Error);
@@ -113,18 +110,35 @@ package body Line_Finder is
    is
       LeftSpeed : Motor_Speed;
       RightSpeed : Motor_Speed;
+
+      LS_Saturate : Integer;
+      RS_Saturate : Integer;
    begin
       case State is
          when Lost =>
             case BotState.OrientationHistory is
                when Left | Center =>
-                  LeftSpeed := (-1) * Fast_Speed +
-                    Integer (BotState.OfflineCounter);
+                  LS_Saturate := (-1) * Fast_Speed + BotState.OfflineCounter;
                   RightSpeed := Fast_Speed;
+
+                  if LS_Saturate > Motor_Speed'Last then
+                     LeftSpeed := Motor_Speed'Last;
+                  elsif LS_Saturate < Motor_Speed'First then
+                     LeftSpeed := Motor_Speed'First;
+                  else
+                     LeftSpeed := LS_Saturate;
+                  end if;
                when Right =>
                   LeftSpeed := Fast_Speed;
-                  RightSpeed := (-1) * Fast_Speed +
-                    Integer (BotState.OfflineCounter);
+                  RS_Saturate := (-1) * Fast_Speed + BotState.OfflineCounter;
+
+                  if RS_Saturate > Motor_Speed'Last then
+                     RightSpeed := Motor_Speed'Last;
+                  elsif RS_Saturate < Motor_Speed'First then
+                     RightSpeed := Motor_Speed'First;
+                  else
+                     RightSpeed := RS_Saturate;
+                  end if;
             end case;
 
             if BotState.OfflineCounter = OfflineCounterType'Last then
@@ -134,10 +148,10 @@ package body Line_Finder is
             end if;
 
             Zumo_LED.Yellow_Led (On => False);
-
-            Zumo_Motors.SetSpeed (LeftVelocity  => LeftSpeed,
-                                  RightVelocity => RightSpeed);
          when others =>
+            BotState.LostCounter := 0;
+            BotState.Decision := Complex;
+
             BotState.OfflineCounter := 0;
             Zumo_LED.Yellow_Led (On => True);
 
@@ -145,12 +159,12 @@ package body Line_Finder is
                            Current_Speed => Fast_Speed,
                            LeftSpeed     => LeftSpeed,
                            RightSpeed    => RightSpeed);
-
-            Zumo_Motors.SetSpeed (LeftVelocity  => LeftSpeed,
-                                  RightVelocity => RightSpeed);
       end case;
 
-      Serial_Print (Msg => LineStateStr (State));
+      Zumo_Motors.SetSpeed (LeftVelocity  => LeftSpeed,
+                            RightVelocity => RightSpeed);
+
+--      Serial_Print (Msg => LineStateStr (State));
 
       BotState.LineHistory := State;
    end SimpleDecisionMatrix;
@@ -163,16 +177,19 @@ package body Line_Finder is
    begin
       case State is
          when BranchLeft =>
+            BotState.LostCounter := 0;
             Zumo_LED.Yellow_Led (On => False);
 
             Zumo_Motors.SetSpeed (LeftVelocity  => 0,
                                   RightVelocity => Slow_Speed);
          when BranchRight =>
+            BotState.LostCounter := 0;
             Zumo_LED.Yellow_Led (On => False);
 
             Zumo_Motors.SetSpeed (LeftVelocity  => Slow_Speed,
                                   RightVelocity => 0);
          when Perp | Fork =>
+            BotState.LostCounter := 0;
             case BotState.OrientationHistory is
                when Left | Center =>
                   LeftSpeed := 0;
@@ -200,7 +217,14 @@ package body Line_Finder is
 
             Zumo_Motors.SetSpeed (LeftVelocity  => LeftSpeed,
                                   RightVelocity => RightSpeed);
+
+            if BotState.LostCounter > Lost_Threshold then
+               BotState.Decision := Simple;
+            else
+               BotState.LostCounter := BotState.LostCounter + 1;
+            end if;
          when Online =>
+            BotState.LostCounter := 0;
             Zumo_LED.Yellow_Led (On => True);
 
             Error_Correct (Error         => Pos,
@@ -215,7 +239,8 @@ package body Line_Finder is
       end case;
 
       if State /= BotState.LineHistory then
-         Serial_Print (Msg => LineStateStr (State));
+         null;
+--         Serial_Print (Msg => LineStateStr (State));
       end if;
 
       BotState.LineHistory := State;

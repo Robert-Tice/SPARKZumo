@@ -1,7 +1,5 @@
 import textwrap
 
-from matplotlib import pyplot as plt
-
 from shapely.geometry import Point
 from shapely.geometry.polygon import LinearRing, Polygon
 
@@ -44,15 +42,6 @@ shapes = {
 }
 
 
-
-# fig = plt.figure(1, figsize=(5,5), dpi=90)
-# ax = fig.add_subplot(111)
-
-# for key, shape in shapes.iteritems():
-#     x, y = shape["polygon"].exterior.xy
-#     ax.plot(x, y, color='#6699cc', alpha=0.7, linewidth=3, solid_capstyle='round', zorder=2)
-# plt.show()
-
 def findBindingPolygons(x, y):
     point = Point(x, y)
     matchList = []
@@ -61,51 +50,82 @@ def findBindingPolygons(x, y):
             matchList.append(key)
     return matchList
 
-
-def GenerateOutputFile():
+def populatePoints():
     for y in range(yMin, yMax+1):
         for x in range(xMin, xMax+1):
-            matchList = findBindingPolygons
+            matchList = findBindingPolygons(x, y)
 
             if len(matchList) == 1:
-                shapes[matchList[0]]["points"].append(point)   
+                shapes[matchList[0]]["points"].append(Point(x, y))   
             elif len(matchList) == 0:
                 pass
             else:
                 raise Exception("Something bad happened")
 
-
-    array = [["Unknown" for x in range(xMin, xMax+1)] for y in range(yMin, yMax+1)]
+def synthesizeArray():
+    array = [["Unknown" for x in range(0, xMax - xMin + 1)] for y in range(0, yMax - yMin + 1)]
 
     for key, shape in shapes.iteritems():
-    #    print "%s len: %d" % (key, len(shape["points"]))
         for point in shape["points"]:
-    #        print "(%d, %d): %s" % (point.x, point.y, key)
-
-            if array[int(point.x)][int(point.y)] == "Unknown":
-                array[int(point.x)][int(point.y)] = key
+            if array[int(point.x) - xMin][int(point.y) - yMin] == "Unknown":
+                array[int(point.x) - xMin][int(point.y) - yMin] = key
             else:
-                print "Found (%d, %d): %s" % (point.x, point.y, array[int(point.x)][int(point.y)])
+                print "Found (%d, %d): %s" % (point.x, point.y, array[int(point.x) - xMin][int(point.y) - yMin])
                 raise Exception('Something bad happened')
+
+    return array
+
+def array2String(array):
+    return "(%s));" % ("(%s" % ("),\n(".join([', '.join([item for item in row]) for row in array])))
+
+def GenerateOutputFile():
+    populatePoints()
+
+    array = synthesizeArray()  
 
     output_str = "   AvgPoint2StateLookup : constant array\n     (X_Coordinate'Range, Y_Coordinate'Range)\n     of LineState :=\n      "
 
     print "array length: %d" % (len(array) * len(array[0]))
 
-    output_str += "(%s));" % ("(%s" % ("),\n(".join([', '.join([item for item in row]) for row in array])))
+    output_str += array2String(array)
 
     output_str = textwrap.fill(output_str, width=78, subsequent_indent="                              ")
 
     with open("output.txt", "w") as file:
         file.write(output_str)
 
+def testArray(x, y):
+    populatePoints()
+    array = synthesizeArray()
+
+    print array2String(array)
+
+    return array[x][y]
+
 
 def main():
     if len(sys.argv) == 1:
         GenerateOutputFile()
     elif len(sys.argv) == 3:
-        myList = findBindingPolygons(int(sys.argv[1]), int(sys.argv[2]))
+        x = int(sys.argv[1])
+        y = int(sys.argv[2])
+        myList = findBindingPolygons(x, y)
+
+        if len(myList) == 0:
+            myList.append("Unknown")
+        elif len(myList) > 1:
+            raise Exception("Something bad happened")
+
+        x -= xMin
+        y -= yMin
+
+        result = testArray(x, y)
+
         print myList
+        if myList[0] == result:
+            print "Test passed"
+        else:
+            print "Test failed: got %s expected %s" % (result, myList[0])
 
 
 if __name__ == "__main__":

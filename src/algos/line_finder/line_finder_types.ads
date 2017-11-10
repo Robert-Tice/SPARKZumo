@@ -11,7 +11,11 @@ package Line_Finder_Types is
    type BotOrientation is
      (Left, Center, Right);
 
-   type OfflineCounterType is mod 2 * Robot_Position'Last;
+   subtype OfflineCounterType is Integer range
+     2 * Motor_Speed'First .. 2 * Motor_Speed'Last;
+
+   type DecisionType is
+     (Simple, Complex);
 
    type RobotState is record
       LineHistory        : LineState := Online;
@@ -22,6 +26,9 @@ package Line_Finder_Types is
       ErrorHistory       : Robot_Position := 0;
 
       OfflineCounter     : OfflineCounterType := 0;
+
+      LostCounter        : Natural := 0;
+      Decision           : DecisionType := Complex;
    end record;
 
    LineStateStr : array (LineState) of String (1 .. 2) :=

@@ -4,6 +4,7 @@ with Types; use Types;
 
 --  These are visible to the spec for SPARK Globals
 with ATmega328P;
+with Geo_Filter;
 with Zumo_LED;
 with Zumo_LSM303;
 with Zumo_L3gd20h;
@@ -30,13 +31,15 @@ package SPARKZumo is
                                Zumo_Motors.FlipRight,
                                Zumo_QTR.Calibrated_On,
                                Zumo_QTR.Calibrated_Off),
-                     Output => (ATmega328P.OCR1A,
-                                ATmega328P.OCR1B),
                      In_Out => (Line_Finder.BotState,
                                 Zumo_QTR.Cal_Vals_On,
-                                Zumo_QTR.Cal_Vals_Off)),
+                                Zumo_QTR.Cal_Vals_Off,
+                                Geo_Filter.Window,
+                                Geo_Filter.Window_Index,
+                                ATmega328P.OCR1A,
+                                ATmega328P.OCR1B)),
      Pre => ( -- Initd and
-               Zumo_LED.Initd and
+                Zumo_LED.Initd and
                  Zumo_Motors.Initd and
                    Zumo_QTR.Initd);
 
@@ -63,14 +66,14 @@ private
                                Zumo_Motors.FlipRight,
                                Zumo_QTR.Initd),
                      Output => (Zumo_QTR.Calibrated_On,
-                                Zumo_QTR.Calibrated_Off,
-                                ATmega328P.OCR1A,
-                                ATmega328P.OCR1B),
+                                Zumo_QTR.Calibrated_Off),
                      In_Out => (Zumo_QTR.Cal_Vals_On,
-                                Zumo_QTR.Cal_Vals_Off)),
+                                Zumo_QTR.Cal_Vals_Off,
+                                ATmega328P.OCR1A,
+                                ATmega328P.OCR1B)),
      Pre => ( -- Initd and
-               Zumo_Motors.Initd and
-                 Zumo_QTR.Initd);
+                Zumo_Motors.Initd and
+                  Zumo_QTR.Initd);
 
    procedure Inits
      with Global => (Input  => (Wire.Transmission_Status),

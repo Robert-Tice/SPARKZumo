@@ -7,23 +7,30 @@ package body Geo_Filter is
       X_Sum, X_Avg  : Integer := 0;
       Y_Sum, Y_Avg  : Integer := 0;
    begin
-      Window (Window_Index) := Current_Point;
 
-      if Window_Index = Window_Type'Last then
-         Window_Index := Window_Type'First;
-      else
-         Window_Index := Window_Index + 1;
-      end if;
+      case State is
+         when Unknown =>
+            null;
+         when others =>
 
-      for Item in Window'Range loop
-         X_Sum := X_Sum + Window (Item).X;
-         Y_Sum := Y_Sum + Window (Item).Y;
-      end loop;
+            Window (Window_Index) := Current_Point;
 
-      X_Avg := X_Sum / Window'Length;
-      Y_Avg := Y_Sum / Window'Length;
+            if Window_Index = Window_Type'Last then
+               Window_Index := Window_Type'First;
+            else
+               Window_Index := Window_Index + 1;
+            end if;
 
-      State := AvgPoint2StateLookup (X_Avg, Y_Avg);
+            for Item in Window'Range loop
+               X_Sum := X_Sum + Window (Item).X;
+               Y_Sum := Y_Sum + Window (Item).Y;
+            end loop;
+
+            X_Avg := X_Sum / Window'Length;
+            Y_Avg := Y_Sum / Window'Length;
+
+            State := AvgPoint2StateLookup (X_Avg, Y_Avg);
+      end case;
 
    end FilterState;
 
