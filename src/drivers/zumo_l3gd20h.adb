@@ -30,7 +30,7 @@ package body Zumo_L3gd20h is
                                            Regs (LOW_ODR), 2#0000_0001#);
       Status     : Wire.Transmission_Status_Index;
 
-      Index : Integer := Init_Seq'First;
+      Index : Byte := Init_Seq'First;
    begin
       Check_WHOAMI;
 

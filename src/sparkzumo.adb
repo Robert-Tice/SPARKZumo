@@ -7,9 +7,13 @@ with Zumo_QTR;
 
 with Line_Finder;
 
+with Interfaces.C; use Interfaces.C;
+
 package body SPARKZumo is
 
    Stop          : constant := 0;
+
+   Start         : unsigned_long := 0;
 
    procedure Calibration_Sequence
    is
@@ -46,7 +50,7 @@ package body SPARKZumo is
 
       Zumo_Motion.Init;
 
-      Initd := True;
+      --     Initd := True;
    end Inits;
 
    procedure Setup
@@ -65,10 +69,13 @@ package body SPARKZumo is
 
    procedure WorkLoop
    is
+      Diff : unsigned_long;
    begin
-
+      Start := Micros;
       Line_Finder.LineFinder (ReadMode => ReadMode);
+      Diff := Micros - Start;
 
+      Serial_Print (Msg => Diff'Img);
    end WorkLoop;
 
 end SPARKZumo;

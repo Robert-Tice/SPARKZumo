@@ -32,7 +32,7 @@ package body Zumo_LSM303 is
                                            Regs (CTRL6), 2#0010_0000#,
                                            Regs (CTRL7), 2#0000_0000#);
       Status     : Wire.Transmission_Status_Index;
-      Index : Integer := Init_Seq'First;
+      Index : Byte := Init_Seq'First;
    begin
       Check_WHOAMI;
 
