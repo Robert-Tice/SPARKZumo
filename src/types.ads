@@ -4,7 +4,7 @@ with Interfaces.C; use Interfaces.C;
 
 package Types is
 
-   type Byte is mod 256
+   type Byte is mod 2 ** 8
      with Size => 8;
 
    subtype Byte_Array_Index_Type is Byte range Byte'First .. Byte'Last - 1;

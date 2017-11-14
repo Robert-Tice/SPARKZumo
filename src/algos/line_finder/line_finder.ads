@@ -38,18 +38,19 @@ private
 
    procedure ReadLine (WhiteLine      : Boolean;
                        ReadMode       : Sensor_Read_Mode;
-                       Line_State     : out LineState;
-                       Bot_Pos        : out Robot_Position)
-     with Global => (Input => (Zumo_QTR.Initd,
-                               Zumo_QTR.Calibrated_On,
-                               Zumo_QTR.Calibrated_Off),
+                       State      : out LineState)
+     with Global => (Input  => (Zumo_QTR.Initd,
+                                Zumo_QTR.Calibrated_On,
+                                Zumo_QTR.Calibrated_Off),
                      In_Out => (BotState,
                                 Zumo_QTR.Cal_Vals_On,
                                 Zumo_QTR.Cal_Vals_Off)),
      Pre => (Zumo_QTR.Initd);
 
+   function CalculateBotPosition return Robot_Position;
+
    procedure DecisionMatrix (State     : LineState;
-                             Pos       : Robot_Position)
+                             State_Thresh : Boolean)
      with Global => (Input  => (Zumo_LED.Initd,
                                 Zumo_Motors.Initd,
                                 Zumo_Motors.FlipLeft,
@@ -60,8 +61,7 @@ private
      Pre => (Zumo_LED.Initd and
                Zumo_Motors.Initd);
 
-   procedure SimpleDecisionMatrix (State : LineState;
-                                   Pos   : Robot_Position)
+   procedure SimpleDecisionMatrix (State : LineState)
      with Global => (Input => (Zumo_LED.Initd,
                                Zumo_Motors.Initd,
                                Zumo_Motors.FlipLeft,

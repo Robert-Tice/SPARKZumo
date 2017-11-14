@@ -12,101 +12,94 @@ package body Line_Finder is
 
    procedure LineFinder (ReadMode : Sensor_Read_Mode)
    is
-      Error    : Robot_Position;
       Line_State : LineState;
+      State_Thresh : Boolean;
    begin
       ReadLine (WhiteLine  => True,
                 ReadMode   => ReadMode,
-                Line_State => Line_State,
-                Bot_Pos    => Error);
+                State => Line_State);
 
       case BotState.Decision is
          when Simple =>
-            SimpleDecisionMatrix (State => Line_State,
-                                  Pos   => Error);
+            SimpleDecisionMatrix (State => Line_State);
          when Complex =>
-            Geo_Filter.FilterState (State => Line_State);
+            Geo_Filter.FilterState (State => Line_State,
+                                    Thresh => State_Thresh);
 
-            DecisionMatrix (State     => Line_State,
-                            Pos       => Error);
+            DecisionMatrix (State        => Line_State,
+                            State_Thresh => State_Thresh);
       end case;
    end LineFinder;
 
    procedure ReadLine (WhiteLine      : Boolean;
-                       ReadMode       : Sensor_Read_Mode;
-                       Line_State     : out LineState;
-                       Bot_Pos        : out Robot_Position)
+                      ReadMode       : Sensor_Read_Mode;
+                      State      : out LineState)
    is
-      Avg     : long := 0;
-      Sum     : long := 0;
-      Value   : Sensor_Value;
-
-      Sensor_Values : Sensor_Array;
-      LineDetect : Byte := 0;
    begin
-      Zumo_QTR.ReadCalibrated (Sensor_Values => Sensor_Values,
+      Zumo_QTR.ReadCalibrated (Sensor_Values => BotState.Sensor_Values,
                                ReadMode      => ReadMode);
 
-      Line_State := Lost;
+      BotState.LineDetect := 0;
 
-      for I in Sensor_Values'Range loop
-         Value := Sensor_Values (I);
+      for I in BotState.Sensor_Values'Range loop
          if WhiteLine then
-            Value := Sensor_Value'Last - Value;
+            BotState.Sensor_Values (I) :=
+              Sensor_Value'Last - BotState.Sensor_Values (I);
          end if;
 
          --  keep track of whether we see the line at all
-         if Value > Line_Threshold then
-            Line_State := Online;
-            LineDetect := LineDetect + 2 ** (I - Sensor_Values'First);
-         end if;
-
-         --  only average in values that are above the noise threshold
-         if Value > Noise_Threshold then
-            Avg := Avg + long (Value) * (long (I - 1) *
-                                           long (Sensor_Value'Last));
-            Sum := Sum + long (Value);
+         if BotState.Sensor_Values (I) > Line_Threshold then
+            BotState.LineDetect := BotState.LineDetect +
+              2 ** (I - BotState.Sensor_Values'First);
          end if;
       end loop;
 
-      if Line_State = Lost then
-         case BotState.OrientationHistory is
-            when Left | Center =>
-               Bot_Pos := Robot_Position'First;
-            when Right =>
-               Bot_Pos := Robot_Position'Last;
-         end case;
-
-      else
-         if Sum /= 0 then
-            BotState.SensorValueHistory := Integer (Avg / Sum);
-
-            if BotState.SensorValueHistory > Robot_Position'Last * 2 then
-               BotState.SensorValueHistory := Robot_Position'Last * 2;
-            end if;
-
-            Bot_Pos := Natural (BotState.SensorValueHistory) -
-              Robot_Position'Last;
-
-            if Bot_Pos < 0 then
-               BotState.OrientationHistory := Left;
-            elsif Bot_Pos > 0 then
-               BotState.OrientationHistory := Right;
-            else
-               BotState.OrientationHistory := Center;
-            end if;
-
-            Line_State := LineStateLookup (Integer (LineDetect));
-         else
-            Bot_Pos := Robot_Position'First;
-            Line_State := Lost;
-         end if;
-      end if;
+      State := LineStateLookup (Integer (BotState.LineDetect));
 
    end ReadLine;
 
-   procedure SimpleDecisionMatrix (State : LineState;
-                                   Pos   : Robot_Position)
+   function CalculateBotPosition return Robot_Position
+   is
+      Ret : Robot_Position;
+
+      Avg     : long := 0;
+      Sum     : long := 0;
+   begin
+      for I in BotState.Sensor_Values'Range loop
+         if BotState.Sensor_Values (I) >  Noise_Threshold then
+            Avg := Avg + long (BotState.Sensor_Values (I)) * (long (I - 1) *
+                                           long (Sensor_Value'Last));
+            Sum := Sum + long (BotState.Sensor_Values (I));
+         end if;
+
+      end loop;
+
+      if Sum /= 0 then
+         BotState.SensorValueHistory := Integer (Avg / Sum);
+
+         if BotState.SensorValueHistory > Robot_Position'Last * 2 then
+            BotState.SensorValueHistory := Robot_Position'Last * 2;
+         end if;
+
+         Ret := Natural (BotState.SensorValueHistory) -
+           Robot_Position'Last;
+
+         if Ret < 0 then
+            BotState.OrientationHistory := Left;
+         elsif Ret > 0 then
+            BotState.OrientationHistory := Right;
+         else
+            BotState.OrientationHistory := Center;
+         end if;
+      else
+         Ret := Robot_Position'First;
+      end if;
+
+      return Ret;
+
+   end CalculateBotPosition;
+
+   procedure SimpleDecisionMatrix (State : LineState)
    is
       LeftSpeed : Motor_Speed;
       RightSpeed : Motor_Speed;
@@ -155,7 +148,7 @@ package body Line_Finder is
             BotState.OfflineCounter := 0;
             Zumo_LED.Yellow_Led (On => True);
 
-            Error_Correct (Error         => Pos,
+            Error_Correct (Error         => CalculateBotPosition,
                            Current_Speed => Fast_Speed,
                            LeftSpeed     => LeftSpeed,
                            RightSpeed    => RightSpeed);
@@ -169,13 +162,21 @@ package body Line_Finder is
       BotState.LineHistory := State;
    end SimpleDecisionMatrix;
 
-   procedure DecisionMatrix (State : LineState;
-                             Pos   : Robot_Position)
+   procedure DecisionMatrix (State        : LineState;
+                             State_Thresh : Boolean)
    is
       LeftSpeed : Motor_Speed;
       RightSpeed : Motor_Speed;
+
+      Mod_State : LineState;
    begin
-      case State is
+      if State_Thresh then
+         Mod_State := State;
+      else
+         Mod_State := Unknown;
+      end if;
+
+      case Mod_State is
          when BranchLeft =>
             BotState.LostCounter := 0;
             Zumo_LED.Yellow_Led (On => False);
@@ -227,7 +228,7 @@ package body Line_Finder is
             BotState.LostCounter := 0;
             Zumo_LED.Yellow_Led (On => True);
 
-            Error_Correct (Error         => Pos,
+            Error_Correct (Error         => CalculateBotPosition,
                            Current_Speed => Fast_Speed,
                            LeftSpeed     => LeftSpeed,
                            RightSpeed    => RightSpeed);
@@ -238,12 +239,7 @@ package body Line_Finder is
             null;
       end case;
 
-      if State /= BotState.LineHistory then
-         null;
---         Serial_Print (Msg => LineStateStr (State));
-      end if;
-
-      BotState.LineHistory := State;
+      BotState.LineHistory := Mod_State;
    end DecisionMatrix;
 
    procedure Error_Correct (Error         : Robot_Position;

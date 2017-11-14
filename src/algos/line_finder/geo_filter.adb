@@ -1,6 +1,7 @@
 package body Geo_Filter is
 
-   procedure FilterState (State : in out LineState)
+   procedure FilterState (State : in out LineState;
+                         Thresh : out Boolean)
    is
       Current_Point : constant Point_Type := State2PointLookup (State);
 
@@ -10,7 +11,7 @@ package body Geo_Filter is
 
       case State is
          when Unknown =>
-            null;
+            Thresh := True;
          when others =>
 
             Window (Window_Index) := Current_Point;
@@ -30,8 +31,27 @@ package body Geo_Filter is
             Y_Avg := Y_Sum / Window'Length;
 
             State := AvgPoint2StateLookup (X_Avg, Y_Avg);
+
+            Thresh := (Radii_Length (X => X_Avg,
+                                     Y => Y_Avg) > Radii_Threshold);
       end case;
 
    end FilterState;
+
+   function Radii_Length (X : Integer;
+                          Y : Integer)
+                          return Integer
+   is
+      N : constant Integer := (X * X) + (Y * Y);
+      A : Integer := N;
+      B : Integer := (A + 1) / 2;
+   begin
+      while B < A loop
+         A := B;
+         B := (A + N / A) / 2;
+      end loop;
+
+      return A;
+   end Radii_Length;
 
 end Geo_Filter;

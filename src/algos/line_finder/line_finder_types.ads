@@ -29,6 +29,10 @@ package Line_Finder_Types is
 
       LostCounter        : Natural := 0;
       Decision           : DecisionType := Complex;
+
+      LineDetect         : Byte := 0;
+
+      Sensor_Values      : Sensor_Array := (others => 0);
    end record;
 
    LineStateStr : array (LineState) of String (1 .. 2) :=
@@ -42,9 +46,9 @@ package Line_Finder_Types is
 
    LineStateLookup : constant array (0 .. 2 ** Num_Sensors - 1) of LineState :=
                        (2#00_000_000# => Lost,
-                        2#00_000_001# => BranchRight,
+                        2#00_000_001# => Online,
                         2#00_000_010# => Online,
-                        2#00_000_011# => BranchRight,
+                        2#00_000_011# => Online,
                         2#00_000_100# => Online,
                         2#00_000_101# => Fork,
                         2#00_000_110# => Online,
@@ -73,7 +77,7 @@ package Line_Finder_Types is
                         2#00_011_101# => Fork,
                         2#00_011_110# => Online,
                         2#00_011_111# => BranchRight,
-                        2#00_100_000# => BranchLeft,
+                        2#00_100_000# => Online,
                         2#00_100_001# => Fork,
                         2#00_100_010# => Fork,
                         2#00_100_011# => Fork,
@@ -89,7 +93,7 @@ package Line_Finder_Types is
                         2#00_101_101# => Unknown,
                         2#00_101_110# => Fork,
                         2#00_101_111# => Fork,
-                        2#00_110_000# => BranchLeft,
+                        2#00_110_000# => Online,
                         2#00_110_001# => Fork,
                         2#00_110_010# => Fork,
                         2#00_110_011# => Fork,

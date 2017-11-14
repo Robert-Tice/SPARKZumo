@@ -9,6 +9,8 @@ package Geo_Filter is
    Corner_Coord       : constant := 15;
    Corner_Coord_Magic : constant := 4;   --  Corner_Coord / (2 * sqrt(3))
 
+   Radii_Threshold    : constant := 7;  --  Corner_Coord / 3 * sqrt(2)
+
    subtype X_Coordinate is Integer range (-1) * Corner_Coord .. Corner_Coord;
    subtype Y_Coordinate is Integer range (-1) * Corner_Coord .. Corner_Coord;
 
@@ -42,11 +44,17 @@ package Geo_Filter is
                                                         Y => Y_Diff));
    Window_Index : Integer := Window_Type'First;
 
-   procedure FilterState (State : in out LineState)
+   procedure FilterState (State : in out LineState;
+                          Thresh : out Boolean)
      with Global => (In_Out => (Window,
                                 Window_Index)),
      Post => (Window_Index in Window_Type'Range and
                 Window_Index /= Window_Index'Old);
+private
+
+   function Radii_Length (X : Integer;
+                          Y : Integer)
+                          return Integer;
 
    AvgPoint2StateLookup : constant array
      (X_Coordinate'Range, Y_Coordinate'Range)
