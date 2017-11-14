@@ -7,13 +7,6 @@ package body Line_Finder is
    Noise_Threshold : constant := Timeout / 10;
    Line_Threshold  : constant := Timeout / 2;
 
-   Default_Fast_Speed      : constant := Motor_Speed'Last - 150;
-   Default_Slow_Speed      : constant := 3 * Default_Fast_Speed / 4;
-   Default_Slowest_Speed : constant := Default_Slow_Speed / 2;
-
-   Fast_Speed              : Motor_Speed := Default_Fast_Speed;
-   Slow_Speed              : Motor_Speed := Default_Slow_Speed;
-
    procedure LineFinder (ReadMode : Sensor_Read_Mode)
    is
       Line_State : LineState;
@@ -70,10 +63,8 @@ package body Line_Finder is
 
    end ReadLine;
 
-   function CalculateBotPosition return Robot_Position
+   procedure CalculateBotPosition (Pos : out Robot_Position)
    is
-      Ret : Robot_Position;
-
       Avg     : long := 0;
       Sum     : long := 0;
    begin
@@ -93,21 +84,19 @@ package body Line_Finder is
             BotState.SensorValueHistory := Robot_Position'Last * 2;
          end if;
 
-         Ret := Natural (BotState.SensorValueHistory) -
+         Pos := Natural (BotState.SensorValueHistory) -
            Robot_Position'Last;
 
-         if Ret < 0 then
+         if Pos < 0 then
             BotState.OrientationHistory := Left;
-         elsif Ret > 0 then
+         elsif Pos > 0 then
             BotState.OrientationHistory := Right;
          else
             BotState.OrientationHistory := Center;
          end if;
       else
-         Ret := Robot_Position'First;
+         Pos := Robot_Position'First;
       end if;
-
-      return Ret;
 
    end CalculateBotPosition;
 
@@ -118,6 +107,8 @@ package body Line_Finder is
 
       LS_Saturate : Integer;
       RS_Saturate : Integer;
+
+      Pos : Robot_Position;
    begin
       case State is
          when Lost =>
@@ -160,7 +151,9 @@ package body Line_Finder is
             BotState.OfflineCounter := 0;
             Zumo_LED.Yellow_Led (On => True);
 
-            Error_Correct (Error         => CalculateBotPosition,
+            CalculateBotPosition (Pos => Pos);
+
+            Error_Correct (Error         => Pos,
                            Current_Speed => Fast_Speed,
                            LeftSpeed     => LeftSpeed,
                            RightSpeed    => RightSpeed);
@@ -178,6 +171,8 @@ package body Line_Finder is
    is
       LeftSpeed : Motor_Speed;
       RightSpeed : Motor_Speed;
+
+      Pos : Robot_Position;
    begin
       case State is
          when BranchLeft =>
@@ -231,7 +226,9 @@ package body Line_Finder is
             BotState.LostCounter := 0;
             Zumo_LED.Yellow_Led (On => True);
 
-            Error_Correct (Error         => CalculateBotPosition,
+            CalculateBotPosition (Pos => Pos);
+
+            Error_Correct (Error         => Pos,
                            Current_Speed => Fast_Speed,
                            LeftSpeed     => LeftSpeed,
                            RightSpeed    => RightSpeed);

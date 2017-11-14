@@ -14,6 +14,13 @@ package Line_Finder is
 
    BotState : RobotState;
 
+   Default_Fast_Speed      : constant := Motor_Speed'Last - 150;
+   Default_Slow_Speed      : constant := 3 * Default_Fast_Speed / 4;
+   Default_Slowest_Speed : constant := Default_Slow_Speed / 2;
+
+   Fast_Speed              : Motor_Speed := Default_Fast_Speed;
+   Slow_Speed              : Motor_Speed := Default_Slow_Speed;
+
    procedure LineFinder (ReadMode : Sensor_Read_Mode)
      with Global => (Input => (Zumo_LED.Initd,
                                Zumo_Motors.Initd,
@@ -23,7 +30,9 @@ package Line_Finder is
                                Zumo_QTR.Calibrated_On,
                                Zumo_QTR.Calibrated_Off),
 
-                     In_Out => (BotState,
+                     In_Out => (Fast_Speed,
+                                Slow_Speed,
+                                BotState,
                                 Zumo_QTR.Cal_Vals_On,
                                 Zumo_QTR.Cal_Vals_Off,
                                 Geo_Filter.Window,
@@ -47,7 +56,7 @@ private
                                 Zumo_QTR.Cal_Vals_Off)),
      Pre => (Zumo_QTR.Initd);
 
-   function CalculateBotPosition return Robot_Position;
+   procedure CalculateBotPosition (Pos : out Robot_Position);
 
    procedure DecisionMatrix (State     : LineState)
      with Global => (Input  => (Zumo_LED.Initd,
@@ -55,6 +64,8 @@ private
                                 Zumo_Motors.FlipLeft,
                                 Zumo_Motors.FlipRight),
                      In_Out => (BotState,
+                                Fast_Speed,
+                                Slow_Speed,
                                 ATmega328P.OCR1A,
                                 ATmega328P.OCR1B)),
      Pre => (Zumo_LED.Initd and
@@ -66,6 +77,7 @@ private
                                Zumo_Motors.FlipLeft,
                                Zumo_Motors.FlipRight),
                      In_Out => (BotState,
+                                Fast_Speed,
                                 ATmega328P.OCR1A,
                                 ATmega328P.OCR1B)),
      Pre => (Zumo_LED.Initd and

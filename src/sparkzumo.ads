@@ -32,6 +32,8 @@ package SPARKZumo is
                                Zumo_QTR.Calibrated_On,
                                Zumo_QTR.Calibrated_Off),
                      In_Out => (Line_Finder.BotState,
+                                Line_Finder.Fast_Speed,
+                                Line_Finder.Slow_Speed,
                                 Zumo_QTR.Cal_Vals_On,
                                 Zumo_QTR.Cal_Vals_Off,
                                 Geo_Filter.Window,
