@@ -7,8 +7,12 @@ package body Line_Finder is
    Noise_Threshold : constant := Timeout / 10;
    Line_Threshold  : constant := Timeout / 2;
 
-   Fast_Speed      : constant := Motor_Speed'Last - 150;
-   Slow_Speed      : constant := Fast_Speed;
+   Default_Fast_Speed      : constant := Motor_Speed'Last - 150;
+   Default_Slow_Speed      : constant := 3 * Default_Fast_Speed / 4;
+   Default_Slowest_Speed : constant := Default_Slow_Speed / 2;
+
+   Fast_Speed              : Motor_Speed := Default_Fast_Speed;
+   Slow_Speed              : Motor_Speed := Default_Slow_Speed;
 
    procedure LineFinder (ReadMode : Sensor_Read_Mode)
    is
@@ -21,13 +25,21 @@ package body Line_Finder is
 
       case BotState.Decision is
          when Simple =>
+            Fast_Speed := Default_Fast_Speed;
+            Slow_Speed := Default_Slow_Speed;
             SimpleDecisionMatrix (State => Line_State);
          when Complex =>
             Geo_Filter.FilterState (State => Line_State,
                                     Thresh => State_Thresh);
+            if State_Thresh then
+               Fast_Speed := Default_Fast_Speed;
+               Slow_Speed := Default_Slow_Speed;
+            else
+               Fast_Speed := Default_Slow_Speed;
+               Slow_Speed := Default_Slowest_Speed;
+            end if;
 
-            DecisionMatrix (State        => Line_State,
-                            State_Thresh => State_Thresh);
+            DecisionMatrix (State => Line_State);
       end case;
    end LineFinder;
 
@@ -162,21 +174,12 @@ package body Line_Finder is
       BotState.LineHistory := State;
    end SimpleDecisionMatrix;
 
-   procedure DecisionMatrix (State        : LineState;
-                             State_Thresh : Boolean)
+   procedure DecisionMatrix (State : LineState)
    is
       LeftSpeed : Motor_Speed;
       RightSpeed : Motor_Speed;
-
-      Mod_State : LineState;
    begin
-      if State_Thresh then
-         Mod_State := State;
-      else
-         Mod_State := Unknown;
-      end if;
-
-      case Mod_State is
+      case State is
          when BranchLeft =>
             BotState.LostCounter := 0;
             Zumo_LED.Yellow_Led (On => False);
@@ -239,7 +242,7 @@ package body Line_Finder is
             null;
       end case;
 
-      BotState.LineHistory := Mod_State;
+      BotState.LineHistory := State;
    end DecisionMatrix;
 
    procedure Error_Correct (Error         : Robot_Position;

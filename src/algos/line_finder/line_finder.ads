@@ -49,8 +49,7 @@ private
 
    function CalculateBotPosition return Robot_Position;
 
-   procedure DecisionMatrix (State     : LineState;
-                             State_Thresh : Boolean)
+   procedure DecisionMatrix (State     : LineState)
      with Global => (Input  => (Zumo_LED.Initd,
                                 Zumo_Motors.Initd,
                                 Zumo_Motors.FlipLeft,
