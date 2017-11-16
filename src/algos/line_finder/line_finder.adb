@@ -70,8 +70,9 @@ package body Line_Finder is
    begin
       for I in BotState.Sensor_Values'Range loop
          if BotState.Sensor_Values (I) >  Noise_Threshold then
-            Avg := Avg + long (BotState.Sensor_Values (I)) * (long (I - 1) *
-                                           long (Sensor_Value'Last));
+            Avg := Avg + long (BotState.Sensor_Values (I)) *
+              (long (I - 1) *
+                   long (Sensor_Value'Last));
             Sum := Sum + long (BotState.Sensor_Values (I));
          end if;
 

@@ -22,9 +22,9 @@ package body Geo_Filter is
                Window_Index := Window_Index + 1;
             end if;
 
-            for Item in Window'Range loop
-               X_Sum := X_Sum + Window (Item).X;
-               Y_Sum := Y_Sum + Window (Item).Y;
+            for Item of Window loop
+               X_Sum := X_Sum + Item.X;
+               Y_Sum := Y_Sum + Item.Y;
             end loop;
 
             X_Avg := X_Sum / Window'Length;

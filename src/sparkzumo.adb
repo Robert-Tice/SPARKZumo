@@ -45,7 +45,7 @@ package body SPARKZumo is
 
       Zumo_Motion.Init;
 
---      Initd := True;
+      Initd := True;
    end Inits;
 
    procedure Setup

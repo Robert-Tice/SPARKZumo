@@ -7,7 +7,7 @@ library project Zumo is
    for Languages use ("Ada");
    for Library_Name use "sparkzumo";
    for Exec_Dir use "obj";
---   for Target use "c";
+   for Target use "c";
 
    package Ide is
       for Vcs_Kind use "git";
@@ -19,7 +19,7 @@ library project Zumo is
    end Compiler;
 
    package Builder is
---      for Global_Compilation_Switches ("Ada") use ("-gnateT=" & project'Project_Dir & "target.atp");
+      for Global_Compilation_Switches ("Ada") use ("-gnateT=" & project'Project_Dir & "target.atp");
    end Builder;
 
    package Prove is
