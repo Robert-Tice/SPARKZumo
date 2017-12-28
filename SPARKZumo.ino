@@ -26,9 +26,10 @@ extern "C" {
 		sparkzumo__exception_handler();		
 	}
 
-
+#ifdef ARDUINO_ARCH_AVR
 	void sei_wrapper() 
 	{ sei(); }
+#endif
 }
 
 void Serial_Print(void* msg) 

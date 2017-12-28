@@ -1,14 +1,14 @@
 pragma SPARK_Mode;
 
 with Interfaces.C; use Interfaces.C;
-
+with Proc_Types; use Proc_Types;
 with Sparkduino; use Sparkduino;
 
 package body Zumo_QTR is
 
    EmitterPin : constant := 2;
 
-   SensorPins : constant array (1 .. 6) of unsigned_char :=
+   SensorPins : constant array (1 .. 6) of Pin_Type :=
                   (4, A3, 11, A0, A2, 5);
 
    Capacitor_Charge : constant := 5;
@@ -51,8 +51,8 @@ package body Zumo_QTR is
                      Mode => PinMode'Pos (INPUT));
 
          --  disable the internal pullup
-         DigitalWrite (Pin => SensorPins (I),
-                       Val => DigPinValue'Pos (LOW));
+--           DigitalWrite (Pin => SensorPins (I),
+--                         Val => DigPinValue'Pos (LOW));
       end loop;
 
       --  measure the time for the voltage to decay

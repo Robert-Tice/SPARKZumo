@@ -4,7 +4,6 @@ with Line_Finder_Types; use Line_Finder_Types;
 with Geo_Filter;
 with Types; use Types;
 
-with ATmega328P;
 with Zumo_LED;
 with Zumo_Motors;
 with Zumo_QTR;
@@ -36,9 +35,7 @@ package Line_Finder is
                                 Zumo_QTR.Cal_Vals_On,
                                 Zumo_QTR.Cal_Vals_Off,
                                 Geo_Filter.Window,
-                                Geo_Filter.Window_Index,
-                                ATmega328P.OCR1A,
-                                ATmega328P.OCR1B)),
+                                Geo_Filter.Window_Index)),
      Pre => (Zumo_LED.Initd and
                Zumo_Motors.Initd and
                  Zumo_QTR.Initd);
@@ -65,9 +62,7 @@ private
                                 Zumo_Motors.FlipRight),
                      In_Out => (BotState,
                                 Fast_Speed,
-                                Slow_Speed,
-                                ATmega328P.OCR1A,
-                                ATmega328P.OCR1B)),
+                                Slow_Speed)),
      Pre => (Zumo_LED.Initd and
                Zumo_Motors.Initd);
 
@@ -77,9 +72,7 @@ private
                                Zumo_Motors.FlipLeft,
                                Zumo_Motors.FlipRight),
                      In_Out => (BotState,
-                                Fast_Speed,
-                                ATmega328P.OCR1A,
-                                ATmega328P.OCR1B)),
+                                Fast_Speed)),
      Pre => (Zumo_LED.Initd and
                Zumo_Motors.Initd);
 

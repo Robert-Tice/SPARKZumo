@@ -1,7 +1,6 @@
 pragma SPARK_Mode;
 
 with Interfaces.C; use Interfaces.C;
-
 with Sparkduino; use Sparkduino;
 
 package body SPARKZumo is
@@ -9,6 +8,23 @@ package body SPARKZumo is
    Stop          : constant := 0;
 
    Sample_Rate : constant := 500;
+
+   procedure RISC_Test
+   is
+      Arr : Sensor_Array;
+   begin
+      loop
+         Zumo_Pushbutton.WaitForButton;
+         Zumo_QTR.Read_Sensors (Sensor_Values => Arr,
+                                ReadMode      => Emitters_On);
+
+         for I in Arr'Range loop
+            Serial_Print_Short (Msg => "Sensor" & I'Img & ": ",
+                                Val => short (Arr (I)));
+         end loop;
+
+      end loop;
+   end RISC_Test;
 
    procedure Calibration_Sequence
    is
@@ -32,6 +48,7 @@ package body SPARKZumo is
 
       Zumo_Motors.SetSpeed (LeftVelocity  => Stop,
                             RightVelocity => Stop);
+
    end Calibration_Sequence;
 
    procedure Inits
@@ -43,7 +60,7 @@ package body SPARKZumo is
 
       Zumo_QTR.Init;
 
-      Zumo_Motion.Init;
+      --    Zumo_Motion.Init;
 
       Initd := True;
    end Inits;
@@ -51,14 +68,26 @@ package body SPARKZumo is
    procedure Setup
    is
    begin
+--      Board_Init.Initialize;
+
       Inits;
       Zumo_LED.Yellow_Led (On => True);
       Zumo_Pushbutton.WaitForButton;
       Zumo_LED.Yellow_Led (On => False);
 
-      Calibration_Sequence;
+      --      Calibration_Sequence;
+      RISC_Test;
 
       Zumo_LED.Yellow_Led (On => True);
+      Zumo_Pushbutton.WaitForButton;
+
+      for I in Zumo_QTR.Cal_Vals_On'Range loop
+         Serial_Print_Calibration (Index => I,
+                                   Min   => Zumo_QTR.Cal_Vals_On (I).Min,
+                                   Max   => Zumo_QTR.Cal_Vals_On (I).Max);
+      end loop;
+
+      SysDelay (1000);
       Zumo_Pushbutton.WaitForButton;
    end Setup;
 

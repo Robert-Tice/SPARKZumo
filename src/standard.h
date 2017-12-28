@@ -34,12 +34,6 @@
 
 #include <Arduino.h>
 
-
-#ifdef __vxworks
-#include "vxWorks.h"
-#include "version.h" /* for _WRS_VXWORKS_MAJOR and _WRS_VXWORKS_MINOR */
-#endif
-
 /* stdint.h is only guaranteed to be there starting with C99 */
 #if __STDC_VERSION__ >= 199901L
 #include <stdint.h>   /* for [u]int*_t */

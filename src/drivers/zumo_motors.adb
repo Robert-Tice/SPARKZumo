@@ -1,5 +1,6 @@
 pragma SPARK_Mode;
 
+with Pwm;
 with Sparkduino; use Sparkduino;
 
 package body Zumo_Motors is
@@ -22,11 +23,7 @@ package body Zumo_Motors is
       SetPinMode (Pin  => DIR_R,
                   Mode => PinMode'Pos (OUTPUT));
 
-      TCCR1A := 2#1010_0000#;
-
-      TCCR1B := 2#0001_0001#;
-
-      ICR1 := 400;
+      Pwm.Configure_Timers;
    end Init;
 
    procedure FlipLeftMotor (Flip : Boolean)
@@ -51,7 +48,8 @@ package body Zumo_Motors is
          Speed := abs Speed;
       end if;
 
-      OCR1B := Word (Speed);
+      Pwm.SetRate (Index => Pwm.Left,
+                   Value => Word (Speed));
 
       if Rev xor FlipLeft then
          DigitalWrite (Pin => DIR_L,
@@ -73,7 +71,8 @@ package body Zumo_Motors is
          Speed := abs Speed;
       end if;
 
-      OCR1A := Word (Speed);
+      Pwm.SetRate (Index => Pwm.Right,
+                   Value => Word (Speed));
 
       if Rev xor FlipRight then
          DigitalWrite (Pin => DIR_R,

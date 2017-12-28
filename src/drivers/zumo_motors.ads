@@ -2,8 +2,6 @@ pragma SPARK_Mode;
 
 with Types; use Types;
 
-with ATmega328P; use ATmega328P;
-
 package Zumo_Motors is
 
    Initd : Boolean := False;
@@ -12,10 +10,7 @@ package Zumo_Motors is
    FlipRight : Boolean := False;
 
    procedure Init
-     with Global => (Output => (TCCR1A,
-                                TCCR1B,
-                                ICR1),
-                     In_Out => Initd),
+     with Global => (In_Out => Initd),
      Pre => not Initd,
      Post => Initd;
 
@@ -29,23 +24,22 @@ package Zumo_Motors is
 
    procedure SetLeftSpeed (Velocity : Motor_Speed)
      with Global => (Input  => (Initd,
-                                FlipLeft),
-                     Output => (OCR1B)),
+                                FlipLeft)),
+                     --                    Output => (Pwm.Register_State)),
      Pre => Initd;
 
    procedure SetRightSpeed (Velocity : Motor_Speed)
      with Global => (Input => (Initd,
-                               FlipRight),
-                     Output => (OCR1A)),
+                               FlipRight)),
+   --                    Output => (Pwm.Register_State)),
      Pre => Initd;
 
    procedure SetSpeed (LeftVelocity  : Motor_Speed;
                        RightVelocity : Motor_Speed)
      with Global => (Input => (Initd,
                                FlipLeft,
-                               FlipRight),
-                     Output => (OCR1A,
-                                OCR1B)),
+                               FlipRight)),
+   --                 Output => (Pwm.Register_State)),
      Pre => Initd;
 
 end Zumo_Motors;

@@ -3,8 +3,8 @@ pragma SPARK_Mode;
 with Types; use Types;
 
 --  These are visible to the spec for SPARK Globals
-with ATmega328P;
 with Geo_Filter;
+--  with Pwm;
 with Zumo_LED;
 with Zumo_LSM303;
 with Zumo_L3gd20h;
@@ -22,6 +22,8 @@ package SPARKZumo is
    Initd    : Boolean := False;
    ReadMode : constant Sensor_Read_Mode := Emitters_On;
 
+   procedure RISC_Test;
+
    procedure WorkLoop
      with Global => (Input => (Initd,
                                Zumo_LED.Initd,
@@ -37,9 +39,7 @@ package SPARKZumo is
                                 Zumo_QTR.Cal_Vals_On,
                                 Zumo_QTR.Cal_Vals_Off,
                                 Geo_Filter.Window,
-                                Geo_Filter.Window_Index,
-                                ATmega328P.OCR1A,
-                                ATmega328P.OCR1B)),
+                                Geo_Filter.Window_Index)),
      Pre => (Initd and
                 Zumo_LED.Initd and
                  Zumo_Motors.Initd and
@@ -70,18 +70,14 @@ private
                      Output => (Zumo_QTR.Calibrated_On,
                                 Zumo_QTR.Calibrated_Off),
                      In_Out => (Zumo_QTR.Cal_Vals_On,
-                                Zumo_QTR.Cal_Vals_Off,
-                                ATmega328P.OCR1A,
-                                ATmega328P.OCR1B)),
+                                Zumo_QTR.Cal_Vals_Off)),
      Pre => (Initd and
                 Zumo_Motors.Initd and
                   Zumo_QTR.Initd);
 
    procedure Inits
      with Global => (Input  => (Wire.Transmission_Status),
-                     Output => (ATmega328P.TCCR1A,
-                                ATmega328P.TCCR1B,
-                                ATmega328P.ICR1),
+                     --                    Output => (Pwm.Register_State),
                      In_Out => (Initd,
                                 Zumo_LED.Initd,
                                 Zumo_LSM303.Initd,

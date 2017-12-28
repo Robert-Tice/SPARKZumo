@@ -1,3 +1,4 @@
+from copy import deepcopy
 import fileinput
 import glob
 import json
@@ -25,11 +26,15 @@ class ArduinoWorkflow:
             'path' : None
         },
         'flash_options' : {
-            'filename' : 'flash.json',
+            'filename' : 'uno.flash.json',
             'path' : None
         },
         'avrconf' : {
             'filename' : 'avrdude.conf',
+            'path' : None
+        },
+        'openocdconf' : {
+            'filename' : 'openocd.cfg',
             'path' : None
         }
     }
@@ -50,11 +55,10 @@ class ArduinoWorkflow:
 
         'build_cmd' : "arduino-builder",
 
-        'flash_cmd' : "avrdude",
+        'uno_flash_cmd' : "avrdude",
+        'hifive_flash_cmd' : "/home/tice/.arduino15/packages/sifive/tools/openocd/9bab0782d313679bb0bfb634e6e87c757b8d5503/bin/openocd",
 
         'gnatls_cmd' : "c-gnatls",
-
-        'fbqn': "arduino:avr:uno",
 
     }
 
@@ -75,14 +79,16 @@ class ArduinoWorkflow:
 
         :return: True if all the conf files are found, False if one or more are not
         """
+
+        temp_conf = deepcopy(self.__conf_files)
+
+        build_type = GPS.Project.root().scenario_variables()['board']
+        temp_conf['build_options']['filename'] = build_type + "." + temp_conf['build_options']['filename']
+
         conf_list = os.listdir(self.__consts['conf_dir'])
-        for key, value in self.__conf_files.iteritems():
+        for key, value in temp_conf.iteritems():
             if value['filename'] in conf_list:
-                value['path'] = os.path.join(self.__consts['conf_dir'], value['filename'])
-            elif "default.%s" % value['filename'] in conf_list:
-                shutil.copyfile(os.path.join(self.__consts['conf_dir'], "default.%s" % value['filename']), 
-                    os.path.join(self.__consts['conf_dir'], value['filename']))
-                value['path'] = os.path.join(self.__consts['conf_dir'], value['filename'])
+                self.__conf_files[key]['path'] = os.path.join(self.__consts['conf_dir'], value['filename'])
             else:
                 self.__error_exit("Could not find %s in directory %s" % (value['filename'], self.__consts['conf_dir']))
                 return False 
@@ -135,19 +141,41 @@ class ArduinoWorkflow:
 
         :return: The list that corresponds to the flash command 
         """
+        ret = []
 
-        return [
-            self.__consts['flash_cmd'],
-            "-C%s" % self.__conf_files['avrconf']['path'],
-            "-v",
-            "-v",
-            "-p%s" % flash_options['partno'],
-            "-carduino",
-            "-P%s" % flash_options['com_port'],
-            "-b%s" % flash_options['baud_rate'],
-            "-D",
-            "-Uflash:w:%s:i" % os.path.join(self.__consts['build_path'], sketch + ".hex")
-        ]
+
+        build_type = GPS.Project.root().scenario_variables()['board']
+
+        if build_type == 'uno':
+            ret = [
+                self.__consts['uno_flash_cmd'],
+                "-C%s" % self.__conf_files['avrconf']['path'],
+                "-v",
+                "-v",
+                "-p%s" % flash_options['partno'],
+                "-carduino",
+                "-P%s" % flash_options['com_port'],
+                "-b%s" % flash_options['baud_rate'],
+                "-D",
+                "-Uflash:w:%s:i" % os.path.join(self.__consts['build_path'], sketch + ".hex")
+            ]
+        elif build_type == 'hifive':
+            ret = [
+                self.__consts['hifive_flash_cmd'],
+                "-s",
+                self.__consts['conf_dir'],
+                "-f",
+                self.__conf_files['openocdconf']['path'],
+                "-c",        
+                '''flash protect 0 64 last off''',
+                "-c",
+                '''program %s verify''' % os.path.join(self.__consts['build_path'], sketch + ".elf"),
+                "-c",
+                '''resume 0x20400000''',
+                "-c",
+                '''exit'''
+            ]
+        return ret
 
 
     def __get_gnatls_cmd(self, dir):

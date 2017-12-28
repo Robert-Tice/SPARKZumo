@@ -59,7 +59,9 @@ package Types is
       Emitters_On,
       Emitters_On_Off);
 
-   subtype Motor_Speed is Integer range -400 .. 400;
+   PWM_Max : constant := 400;
+
+   subtype Motor_Speed is Integer range (-1) * PWM_Max .. PWM_Max;
 
    subtype Degrees is Float;
 
