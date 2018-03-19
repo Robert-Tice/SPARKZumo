@@ -3,6 +3,7 @@ import fileinput
 import glob
 import json
 import os
+import pip
 import re
 import shutil
 import stat
@@ -19,6 +20,10 @@ def del_rw(action, name, exc):
 
 
 class ArduinoWorkflow:
+
+    __plugin_deps = [
+        "shapely"
+    ]
 
     __conf_files = {
         'build_options' : {
@@ -60,6 +65,7 @@ class ArduinoWorkflow:
 
         'gnatls_cmd' : "c-gnatls",
 
+        'geolookup_ads': os.path.join(GPS.pwd(), 'src', 'algos', 'line_finder', 'geo_filter.ads')
     }
 
     __rtl_dep_list = []
@@ -302,19 +308,34 @@ class ArduinoWorkflow:
                 if ret is not 0:
                     self.__error_exit("Failed workflow task %s." % value['name'])
                     return
-                taskcounter += value['tasks']         
+                taskcounter += value['tasks']
+
+    def __generate_geolookup_table(self):
+        import geolookup
+
+        ctx = lal.AnalysisContext()
+        u = ctx.get_from_file(self.__consts['geolookup_ads'])
+
+        GenerateOutputFiles()
 
 
-    def __do_ccg_wf(self, task, start_task_num=1, end_task_num=2):
+    def __do_ccg_wf(self, task, start_task_num=1, end_task_num=3):
+        #####################################
+        ## Task - Generate geolookup table ##
+        #####################################
+        task.set_progress(start_task_num, end_task_num)
+        #self.__generate_geolookup_table()
+
         ##########################
         ## Task    - SPARK-to-C ##
         ##########################
+        task.set_progress(start_task_num + 1, end_task_num)
         for file in os.listdir(os.path.join(self.__consts['ccg_lib'], "src")):
             if os.path.isdir(os.path.join(self.__consts['ccg_lib'], "src", file)):
                 shutil.rmtree(os.path.join(self.__consts['ccg_lib'], "src", file), onerror=del_rw)
             else:
                 os.remove(os.path.join(self.__consts['ccg_lib'], "src", file))
-
+        
 
         self.__console_msg("Generating C code.")
         builder = promises.TargetWrapper("Build All")
@@ -335,7 +356,7 @@ class ArduinoWorkflow:
             self.__error_exit("Failed to post-process CCG output.")
             return
 
-        task.set_progress(start_task_num + 1, end_task_num)
+        task.set_progress(start_task_num + 2, end_task_num)
 
 
     def __do_arduino_build_wf(self, task, start_task_num=1, end_task_num=2):
@@ -435,7 +456,14 @@ class ArduinoWorkflow:
 
     #     self.__arduino_console_timeout = GPS.Timeout(200, self.__ardunio_console_callback)
 
+    def __install_plugin_deps(self):
+        ret = pip.main(["install"] + self.__plugin_deps)
 
+        if ret is not 0:
+            self.__error_exit("Unable to install plugin dependencies.")
+            return False
+
+        return True
 
     def __init__(self):
         """
@@ -447,6 +475,10 @@ class ArduinoWorkflow:
 
         There is a build all which will run all workflows in the order specified in the list
         """
+
+        if not self.__install_plugin_deps():
+            raise Exception("Failed to install plugin dependencies.")
+
         GPS.Menu.create("/Build/Arduino")
         self.__workflow_registry = [
             {
@@ -499,10 +531,14 @@ class ArduinoWorkflow:
                 menu='/Build/Arduino/' + value['name'],
                 description=value['description'])
 
+        self.__console_msg("Plugin successfully initialized...")
+
 
 def initialize_project_plugin():
     """
     Entry point hook to GPS
     """
-    ArduinoWorkflow()
- 
+    try:
+        ArduinoWorkflow()
+    except Exception as inst:
+        GPS.Console("Messages").write(inst.args[0] + "\n", mode="error")
