@@ -320,9 +320,6 @@ class ArduinoWorkflow:
         f = self.__consts['geolookup_ads']
         ctx = lal.AnalysisContext('utf-8')
 
-        with open(f) as ff:
-            orig_content = ff.read().splitlines()
-
         unit = ctx.get_from_file(f)
         if unit.root is None:
             self.__error_exit("Could not parse %s." % f)
@@ -346,21 +343,25 @@ class ArduinoWorkflow:
             self.__error_exit("Error parsing file for AvgPoint2StateLookup")
             return False
 
-        agg_start_line = array_node[0].f_default_expr.sloc_range.start.line
-        agg_start_col = array_node[0].f_default_expr.sloc_range.start.column
+        agg_start_line = int(array_node[0].f_default_expr.sloc_range.start.line)
+        agg_start_col = int(array_node[0].f_default_expr.sloc_range.start.column)
 
-        agg_end_line = array_node[0].f_default_expr.sloc_range.end.line
-        agg_end_col = array_node[0].f_default_expr.sloc_range.end.column
+        agg_end_line = int(array_node[0].f_default_expr.sloc_range.end.line)
+        agg_end_col = int(array_node[0].f_default_expr.sloc_range.end.column)
 
-        new_content = orig_content[:agg_start_line - 1]
+        buf = GPS.EditorBuffer.get(GPS.File(f))
+        agg_start_cursor = buf.at(agg_start_line, agg_start_col)
+        agg_end_cursor = buf.at(agg_end_line, agg_end_col)
 
-        new_content.extend([array_str])
-        
-        new_content.extend(orig_content[agg_end_line:])
+        agg_end_mark = agg_end_cursor.create_mark()
 
-        with open(f, 'w') as ff:
-            ff.write('\n'.join(new_content) + '\n')
+        buf.delete(agg_start_cursor, agg_end_cursor)
+        # buf.insert(agg_start_cursor, array_str)
 
+        # buf.select(agg_start_cursor, agg_end_mark.location())
+
+        # GPS.execute_action("Format Selection")
+        agg_end_mark.delete()
         return True
         
     def __do_ccg_wf(self, task, start_task_num=1, end_task_num=3):
