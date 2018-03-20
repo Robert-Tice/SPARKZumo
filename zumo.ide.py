@@ -354,9 +354,9 @@ class ArduinoWorkflow:
 
         new_content = orig_content[:agg_start_line]
 
-        new_content.append(array_str)
-
-        new_content.append(orig_content[agg_end_line + 1:])
+        new_content.extend([array_str])
+        
+        new_content.extend(orig_content[agg_end_line + 1:])
 
         with open(f, 'w') as ff:
             ff.write('\n'.join(new_content) + '\n')
