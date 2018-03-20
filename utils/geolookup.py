@@ -38,6 +38,7 @@ def GeneratePlots(grph):
 
         ax.add_patch(patch)
 
+    # TODO: This threshold should not be hard coded
     thresh_circle = plt.Circle((0, 0), 7, facecolor='#ffffff', edgecolor=[0,0,0])
     ax.add_patch(thresh_circle)
 

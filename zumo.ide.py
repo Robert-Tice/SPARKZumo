@@ -7,6 +7,7 @@ import pip
 import re
 import shutil
 import stat
+import textwrap
 
 import GPS
 import gps_utils
@@ -317,10 +318,17 @@ class ArduinoWorkflow:
         sys.path.append(".")
         import utils.graph as graph
 
-        f = self.__consts['geolookup_ads']
-        ctx = lal.AnalysisContext('utf-8')
+        def update_lalctx(file):
+            ctx = lal.AnalysisContext()
+            return ctx.get_from_file(file)
 
-        unit = ctx.get_from_file(f)
+        f = self.__consts['geolookup_ads']
+
+        ######################################
+        ##  Search and replace lookup table ##
+        ######################################
+        
+        unit = update_lalctx(f)
         if unit.root is None:
             self.__error_exit("Could not parse %s." % f)
             for diag in unit.diagnostics:
@@ -353,15 +361,68 @@ class ArduinoWorkflow:
         agg_start_cursor = buf.at(agg_start_line, agg_start_col)
         agg_end_cursor = buf.at(agg_end_line, agg_end_col)
 
-        agg_end_mark = agg_end_cursor.create_mark()
-
         buf.delete(agg_start_cursor, agg_end_cursor)
-        # buf.insert(agg_start_cursor, array_str)
+        fixed_array_str = textwrap.fill(array_str, width=78, initial_indent=' ' * 28, subsequent_indent=' ' * 29)
+        buf.insert(agg_start_cursor, fixed_array_str[agg_start_col - 1:])
 
-        # buf.select(agg_start_cursor, agg_end_mark.location())
+        ################################
+        ##  Update corner coord magic ##
+        ################################
 
-        # GPS.execute_action("Format Selection")
-        agg_end_mark.delete()
+        unit = update_lalctx(f)
+        if unit.root is None:
+            self.__error_exit("Could not parse %s." % f)
+            for diag in unit.diagnostics:
+                self.__error_exit('   {}'.format(diag))
+            return False
+
+        ydiff_node = unit.root.findall(lambda n: n.is_a(lal.NumberDecl) and n.f_ids.text=='Y_Diff')
+        if len(ydiff_node) != 1:
+            self.__error_exit("Error parsing file for Y_Diff")
+            return False
+
+        ydiff_start_line = int(ydiff_node[0].f_expr.sloc_range.start.line)
+        ydiff_start_col = int(ydiff_node[0].f_expr.sloc_range.start.column)
+
+        ydiff_end_line = int(ydiff_node[0].f_expr.sloc_range.end.line)
+        ydiff_end_col = int(ydiff_node[0].f_expr.sloc_range.end.column)
+
+        ydiff_start_cursor = buf.at(ydiff_start_line, ydiff_start_col)
+        ydiff_end_cursor = buf.at(ydiff_end_line, ydiff_end_col)
+
+        buf.delete(ydiff_start_cursor, ydiff_end_cursor)
+        new_ydiff = str(grph.y_diff) + ";"
+        buf.insert(ydiff_start_cursor, new_ydiff)
+
+        #############################
+        ##  Update radii threshold ##
+        #############################
+
+        unit = update_lalctx(f)
+        if unit.root is None:
+            self.__error_exit("Could not parse %s." % f)
+            for diag in unit.diagnostics:
+                self.__error_exit('   {}'.format(diag))
+            return False
+
+        radii_node = unit.root.findall(lambda n: n.is_a(lal.NumberDecl) and n.f_ids.text=='Radii_Threshold')
+        if len(radii_node) != 1:
+            self.__error_exit("Error parsing file for Radii_Threshold")
+            return False
+
+        radii_start_line = int(radii_node[0].f_expr.sloc_range.start.line)
+        radii_start_col = int(radii_node[0].f_expr.sloc_range.start.column)
+
+        radii_end_line = int(radii_node[0].f_expr.sloc_range.end.line)
+        radii_end_col = int(radii_node[0].f_expr.sloc_range.end.column)
+
+        radii_start_cursor = buf.at(radii_start_line, radii_start_col)
+        radii_end_cursor = buf.at(radii_end_line, radii_end_col)
+
+        buf.delete(radii_start_cursor, radii_end_cursor)
+        new_radii = str(grph.radii) + ";"
+        buf.insert(radii_start_cursor, new_radii)
+
         return True
         
     def __do_ccg_wf(self, task, start_task_num=1, end_task_num=3):
