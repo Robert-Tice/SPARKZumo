@@ -14,6 +14,8 @@ import workflows
 import workflows.promises as promises
 from workflows import task_workflow
 
+import libadalang as lal
+
 def del_rw(action, name, exc):
     os.chmod(name, stat.S_IWRITE)
     os.remove(name)
@@ -311,20 +313,64 @@ class ArduinoWorkflow:
                 taskcounter += value['tasks']
 
     def __generate_geolookup_table(self):
-        import geolookup
+        import sys
+        sys.path.append(".")
+        import utils.graph as graph
 
-        ctx = lal.AnalysisContext()
-        u = ctx.get_from_file(self.__consts['geolookup_ads'])
+        f = self.__consts['geolookup_ads']
+        ctx = lal.AnalysisContext('utf-8')
 
-        GenerateOutputFiles()
+        with open(f) as ff:
+            orig_content = ff.read().splitlines()
 
+        unit = ctx.get_from_file(f)
+        if unit.root is None:
+            self.__error_exit("Could not parse %s." % f)
+            for diag in unit.diagnostics:
+                self.__error_exit('   {}'.format(diag))
+            return False
 
+        corner_node = unit.root.findall(lambda n: n.is_a(lal.NumberDecl) and n.f_ids.text=='Corner_Coord')
+
+        if len(corner_node) != 1:
+            self.__error_exit("Error parsing file for Corner_Coord")
+            return False
+
+        value = int(corner_node[0].f_expr.text)
+        grph = graph.graph(value)
+        array = grph.synthesizeArray()
+        array_str = grph.array2String(array)
+
+        array_node = unit.root.findall(lambda n: n.is_a(lal.ObjectDecl) and n.f_ids.text=='AvgPoint2StateLookup')
+        if len(array_node) != 1:
+            self.__error_exit("Error parsing file for AvgPoint2StateLookup")
+            return False
+
+        agg_start_line = array_node[0].f_default_expr.sloc_range.start.line
+        agg_start_col = array_node[0].f_default_expr.sloc_range.start.column
+
+        agg_end_line = array_node[0].f_default_expr.sloc_range.end.line
+        agg_end_col = array_node[0].f_default_expr.sloc_range.end.column
+
+        new_content = orig_content[:agg_start_line]
+
+        new_content.append(array_str)
+
+        new_content.append(orig_content[agg_end_line + 1:])
+
+        with open(f, 'w') as ff:
+            ff.write('\n'.join(new_content) + '\n')
+
+        return True
+        
     def __do_ccg_wf(self, task, start_task_num=1, end_task_num=3):
         #####################################
         ## Task - Generate geolookup table ##
         #####################################
         task.set_progress(start_task_num, end_task_num)
-        #self.__generate_geolookup_table()
+        if not self.__generate_geolookup_table():
+            self.__error_exit("Failed to generate lookup tables...")
+            return
 
         ##########################
         ## Task    - SPARK-to-C ##
