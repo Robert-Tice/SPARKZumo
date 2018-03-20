@@ -352,11 +352,11 @@ class ArduinoWorkflow:
         agg_end_line = array_node[0].f_default_expr.sloc_range.end.line
         agg_end_col = array_node[0].f_default_expr.sloc_range.end.column
 
-        new_content = orig_content[:agg_start_line]
+        new_content = orig_content[:agg_start_line - 1]
 
         new_content.extend([array_str])
         
-        new_content.extend(orig_content[agg_end_line + 1:])
+        new_content.extend(orig_content[agg_end_line:])
 
         with open(f, 'w') as ff:
             ff.write('\n'.join(new_content) + '\n')
