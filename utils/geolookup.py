@@ -38,8 +38,7 @@ def GeneratePlots(grph):
 
         ax.add_patch(patch)
 
-    # TODO: This threshold should not be hard coded
-    thresh_circle = plt.Circle((0, 0), 7, facecolor='#ffffff', edgecolor=[0,0,0])
+    thresh_circle = plt.Circle((0, 0), grph.radii, facecolor='#ffffff', edgecolor=[0,0,0])
     ax.add_patch(thresh_circle)
 
     plt.text(-2, -1, "Noise")
@@ -60,7 +59,6 @@ def usage():
     print "\n"
     print "%s [corner colordinate] x y" % (sys.argv[0])
     print "\t Get the state that corresponds to the coordinate at (x, y)"
-
 
 def main():
     if len(sys.argv) == 2:

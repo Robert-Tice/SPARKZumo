@@ -34,7 +34,6 @@ class graph:
         }
     }
 
-
     def __init__(self, cornerCoord):
         self.__xMin = -1 * cornerCoord
         self.__xMax = cornerCoord
@@ -78,6 +77,10 @@ class graph:
 
         self.__populatePoints()
 
+    def __del__(self):
+        for key, shape in self.shapeIter():
+            del shape["points"][:]
+
     def findBindingPolygons(self, x, y):
         point = Point(x, y)
         matchList = []
@@ -108,10 +111,12 @@ class graph:
 
         for key, shape in self.shapeIter():
             for point in shape["points"]:
-                if array[int(point.x) - self.__xMin][int(point.y) - self.__yMin] == "Unknown":
-                    array[int(point.x) - self.__xMin][int(point.y) - self.__yMin] = key
+                x = int(point.x) - self.__xMin
+                y = int(point.y) - self.__yMin
+                if array[x][y] == "Unknown":
+                    array[x][y] = key
                 else:
-                    print "Found (%d, %d): %s" % (point.x, point.y, array[int(point.x) - self.__xMin][int(point.y) - self.__yMin])
+                    print "Found (%d, %d): %s" % (point.x, point.y, array[x][y])
                     raise Exception('Something bad happened')
 
         return array
