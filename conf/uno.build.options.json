@@ -1,0 +1,10 @@
+{
+  "builtInLibrariesFolders": "/home/tice/Documents/arduino-1.8.5/libraries",
+  "customBuildProperties": "build.warn_data_percentage=75,runtime.tools.arduinoOTA.path=/home/tice/Documents/arduino-1.8.5/hardware/tools/avr,runtime.tools.avrdude.path=/home/tice/Documents/arduino-1.8.5/hardware/tools/avr,runtime.tools.avr-gcc.path=/home/tice/Documents/arduino-1.8.5/hardware/tools/avr",
+  "fqbn": "arduino:avr:uno",
+  "hardwareFolders": "/home/tice/Documents/arduino-1.8.5/hardware",
+  "otherLibrariesFolders": "/home/tice/development/SPARKZumo/lib",
+  "runtime.ide.version": "10805",
+  "sketchLocation": "/home/tice/development/SPARKZumo/SPARKZumo.ino",
+  "toolsFolders": "/home/tice/Documents/arduino-1.8.5/tools-builder,/home/tice/Documents/arduino-1.8.5/hardware/tools/avr"
+}

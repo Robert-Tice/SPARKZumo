@@ -1,0 +1,5 @@
+---
+com_port: "/dev/ttyACM0"
+partno: "atmega328p"
+baud_rate: "115200"
+...

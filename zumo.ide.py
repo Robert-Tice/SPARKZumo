@@ -1,17 +1,15 @@
 from copy import deepcopy
-import fileinput
 import glob
-import json
 import os
 import pip
 import re
 import shutil
 import stat
 import textwrap
+import yaml
 
 import GPS
 import gps_utils
-import workflows
 import workflows.promises as promises
 from workflows import task_workflow
 
@@ -25,7 +23,7 @@ def del_rw(action, name, exc):
 class ArduinoWorkflow:
 
     __plugin_deps = [
-        "shapely"
+        "shapely"  # used during the geolookup generation
     ]
 
     __conf_files = {
@@ -34,7 +32,7 @@ class ArduinoWorkflow:
             'path' : None
         },
         'flash_options' : {
-            'filename' : 'uno.flash.json',
+            'filename' : 'uno.flash.yaml',
             'path' : None
         },
         'avrconf' : {
@@ -48,7 +46,7 @@ class ArduinoWorkflow:
     }
 
     __consts = {
-        # after SPARK-to-C completes, the post_ccg function pulls the .c and .h files from
+        # after CCG completes, the post_ccg function pulls the .c and .h files from
         #   ccg_output and copies them into a compatible Arduino project folder (renames .c to .cpp)
         'ccg_lib' : os.path.join(GPS.pwd(), "lib"),
 
@@ -77,11 +75,6 @@ class ArduinoWorkflow:
     #    this is initilized from the __init__
     __workflow_registry = []     
 
-    __arduino_console_timeout = None 
-    __arduino_console_ser_inst = None 
-    __arduino_console_inst = None
-
-
     def __get_conf_paths(self):
         """
         Search for conf files in the conf path and populate the conf_dic dictionary
@@ -106,17 +99,17 @@ class ArduinoWorkflow:
 
     def __read_flashfile(self):
         """
-        Reads data from the flash.json file
+        Reads data from the flash.yaml file
 
-        The information in flash.json describes the hardware and 
+        The information in flash.yaml describes the hardware and 
         communication port to the avrdude executable
 
-        :return: The python dictionary representation of the json file
+        :return: The python dictionary representation of the yaml file
 
         """
         conf = self.__conf_files['flash_options']['path']
         with open(conf) as datafile:
-            return json.load(datafile)
+            return yaml.load(datafile)
 
 
     def __get_build_cmd(self, sketch):
@@ -134,7 +127,6 @@ class ArduinoWorkflow:
             "-logger=%s" % self.__consts['logger'],
             "-build-options-file=%s" % self.__conf_files['build_options']['path'],
             "-build-path=%s" % self.__consts['build_path'],
- #           "-quiet",
             "-verbose",
             sketch
         ]
@@ -144,7 +136,7 @@ class ArduinoWorkflow:
         """
         Returns the full command line to flash the Arduino
 
-        :param flash_options: This is the json dictionary read from the flash config file
+        :param flash_options: This is the yaml dictionary read from the flash config file
 
         :param sketch: this is the filename of the arduino sketch found in the project
 
@@ -236,10 +228,10 @@ class ArduinoWorkflow:
 
     def __post_ccg(self, obj_dir, clean=True):
         """
-        This function handles post processing files to convert the SPARK-to-C output into a
+        This function handles post processing files to convert the CCG output into a
         format that the Arduino build system can understand
 
-        SPARK-to-C dumps .c and .h files into the obj_dir directory. This function copies
+        CCG dumps .c and .h files into the obj_dir directory. This function copies
         those files into ccg_lib/src in order to setup an Arduino compatible build directory.
 
 
@@ -435,7 +427,7 @@ class ArduinoWorkflow:
             return
 
         ##########################
-        ## Task    - SPARK-to-C ##
+        ## Task    - CCG        ##
         ##########################
         task.set_progress(start_task_num + 1, end_task_num)
         for file in os.listdir(os.path.join(self.__consts['ccg_lib'], "src")):
@@ -535,35 +527,6 @@ class ArduinoWorkflow:
         task.set_progress(start_task_num + 1, end_task_num) 
 
 
-    # def __ardunio_console_callback(self):
-    #     num_waiting = self.__arduino_console_ser_inst.in_waiting()
-    #     if num_waiting > 0:
-    #         x = self.__arduino_console_ser_inst.read(num_waiting)
-    #         self.__arduino_console_inst.write(x.decode("utf-8"))
-
-    # def __arduino_console_destroy(self):
-    #     self.__arduino_console_timeout.remove()
-    #     self.__arduino_console_ser_inst.close()
-    #     self.__arduino_console_ser_inst = None
-    #     self.__arduino_console_timeout = None
-
-
-    # def __do_arduino_console_wf(self, task, start_task_num=1, end_task_num=1):
-    #     self.__console_msg("Opening console connection to Arduino")
-    #     self.__arduino_console_inst = GPS.Console("Arduino Console", on_destroy=self.__arduino_console_destroy)
-
-    #     if not self.__get_conf_paths():
-    #         return
-    #     flash_options = self.__read_flashfile()
-
-    #     try:
-    #         self.__arduino_console_ser_inst = serial.Serial(flash_options['com_port'], int(flash_options['baud_rate']), timeout=0)
-    #     except:
-    #         self.__error_exit("Could not connect to Arduino console.")
-    #         return
-
-    #     self.__arduino_console_timeout = GPS.Timeout(200, self.__ardunio_console_callback)
-
     def __install_plugin_deps(self):
         ret = pip.main(["install"] + self.__plugin_deps)
 
@@ -618,14 +581,6 @@ class ArduinoWorkflow:
                 'all-flag' : True
             }
         ]
-
-        # gps_utils.make_interactive(
-        #             callback=self.__do_arduino_console_wf, 
-        #             category= "Build", 
-        #             name="Arduino Console", 
-        #             toolbar='main',
-        #             menu='/Build/Arduino/Arduino Console', 
-        #             description='View Arduino Console data')
 
         for value in self.__workflow_registry:
             value['action'] = gps_utils.make_interactive(

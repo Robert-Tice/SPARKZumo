@@ -1,0 +1,10 @@
+{
+  "builtInLibrariesFolders": "/home/tice/Downloads/arduino-1.8.5/libraries",
+  "customBuildProperties": "build.warn_data_percentage=75,runtime.tools.riscv32-unknown-elf-gcc.path=/home/tice/.arduino15/packages/sifive/tools/riscv32-unknown-elf-gcc/3f7b3696217548bc31aeccf9a0c89bdfa4e16a8f,runtime.tools.openocd.path=/home/tice/.arduino15/packages/sifive/tools/openocd/9bab0782d313679bb0bfb634e6e87c757b8d5503",
+  "fqbn": "sifive:riscv:hifive1:toolsloc=default,clksrc=hfxtal",
+  "hardwareFolders": "/home/tice/Downloads/arduino-1.8.5/hardware,/home/tice/.arduino15/packages",
+  "otherLibrariesFolders": "/home/tice/development/SPARKZumo/lib",
+  "runtime.ide.version": "10805",
+  "sketchLocation": "/home/tice/development/SPARKZumo/SPARKZumo.ino",
+  "toolsFolders": "/home/tice/Downloads/arduino-1.8.5/tools-builder,/home/tice/Downloads/arduino-1.8.5/hardware/tools/avr,/home/tice/.arduino15/packages"
+}
