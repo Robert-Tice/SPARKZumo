@@ -590,10 +590,17 @@ class ArduinoWorkflow:
         GPS.Menu.create("/Build/Arduino")
         self.__workflow_registry = [
             {
+                'name' : "Build & Flash",
+                'description' : 'Run ccg, Build Arduino Project, and Flash to Board',
+                'func' : self.__do_build_all_wf,
+                'tasks' : 0,
+                'all-flag' : False
+            },
+            {
                 'name' : "Generate C Code",
                 'description' : 'Generate C code and Arduino lib',
                 'func' : self.__do_ccg_wf,
-                'tasks' : 2,
+                'tasks' : 3,
                 'all-flag' : True
             },
             {
@@ -612,16 +619,6 @@ class ArduinoWorkflow:
             }
         ]
 
-
-        if len(self.__workflow_registry) > 1:
-            gps_utils.make_interactive(
-                    callback=lambda: task_workflow("Build all", self.__do_build_all_wf), 
-                    category= "Build", 
-                    name="Build and Flash", 
-                    toolbar='main',
-                    menu='/Build/Arduino/Build All', 
-                    description='Run ccg, Build Arduino Project, and Flash to Board')
-
         # gps_utils.make_interactive(
         #             callback=self.__do_arduino_console_wf, 
         #             category= "Build", 
@@ -631,7 +628,7 @@ class ArduinoWorkflow:
         #             description='View Arduino Console data')
 
         for value in self.__workflow_registry:
-            gps_utils.make_interactive(
+            value['action'] = gps_utils.make_interactive(
                 callback=lambda x=value: task_workflow(x['name'], x['func']),
                 category="Build",
                 name=value['name'],
@@ -641,12 +638,25 @@ class ArduinoWorkflow:
 
         self.__console_msg("Plugin successfully initialized...")
 
+    def cleanup(self):
+        for value in self.__workflow_registry:
+            value['action'][0].destroy_ui()
+
+pluginRef = None
 
 def initialize_project_plugin():
     """
     Entry point hook to GPS
     """
+    global pluginRef
+
     try:
-        ArduinoWorkflow()
+        pluginRef = ArduinoWorkflow()
     except Exception as inst:
         GPS.Console("Messages").write(inst.args[0] + "\n", mode="error")
+
+def finalize_project_plugin():
+    global pluginRef
+
+    pluginRef.cleanup()
+    del globals()[pluginRef]
