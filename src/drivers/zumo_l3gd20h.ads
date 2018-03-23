@@ -3,21 +3,37 @@
 with Types; use Types;
 with Interfaces.C; use Interfaces.C;
 
+--  @summary
+--  Interface to the robots 3-axis gyroscope
+--
+--  @description
+--  This package exposes the interface to the robot's 3 axis gyroscope
+--
 package Zumo_L3gd20h is
 
+   --  The gain to apply to a sensor reading
    Gain : constant := 0.07;  -- degrees/s/digit
 
+   --  True if package is init'd
    Initd : Boolean := False;
 
+   --  Inits the package. Pin muxing and whatnot.
    procedure Init
      with Pre => not Initd,
      Post => Initd;
 
+   --  Read the temperature of the sensor
+   --  @return a byte value with the temperature
    function Read_Temp return signed_char
      with Pre => Initd;
+
+   --  Read the status of the sensor
+   --  @return a byte value with the status
    function Read_Status return Byte
      with Pre => Initd;
 
+   --  Read the gyro of the sensor
+   --  @param Data the read data from the sensor
    procedure Read_Gyro (Data : out Axis_Data)
      with Pre => Initd;
 
@@ -25,7 +41,29 @@ package Zumo_L3gd20h is
 
 private
 
+   --  Reads the WHOAMI register from the sensor and compares it against
+   --    the known value
    procedure Check_WHOAMI;
+
+   --  The mapping of registers in the sensor
+   --  @value WHO_AM_I Device identification register
+   --  @value CTRL1 control 1 register
+   --  @value CTRL2 control 2 register
+   --  @value CTRL3 control 3 register
+   --  @value CTRL4 control 4 register
+   --  @value CTRL5 control 5 register
+   --  @value REFERENCE Digital high pass filter reference value
+   --  @value OUT_TEMP Temperature data (-1LSB/deg with 8 bit resolution).
+   --    The value is expressed as two's complement.
+   --  @value STATUS sensor status register
+   --  @value OUT_X_L X-axis angular rate data low register
+   --  @value OUT_X_H X-axis angular rate data high register
+   --  @value OUT_Y_L Y-axis angular rate data low register
+   --  @value OUT_Y_H Y-axis angular rate data high register
+   --  @value OUT_Z_L Z-axis angular rate data low register
+   --  @value OUT_Z_H Z-axis angular rate data high register
+   --  @value FIFO_CTRL fifo control register
+   --  @value FIFO_SRC stored data level in fifo
 
    type Reg_Index is
      (WHO_AM_I,
@@ -56,6 +94,7 @@ private
       IG_DURATION,
       LOW_ODR);
 
+   --  Mapping of register enums to actual register addresses
    Regs : array (Reg_Index) of Byte := (WHO_AM_I    => 16#0F#,
                                         CTRL1       => 16#20#,
                                         CTRL2       => 16#21#,

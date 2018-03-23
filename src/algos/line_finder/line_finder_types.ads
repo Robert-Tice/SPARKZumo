@@ -2,21 +2,54 @@ pragma SPARK_Mode;
 
 with Types; use Types;
 
+--  @summary
+--  Types used in the line finder algorithm
+
 package Line_Finder_Types is
 
+   --  States detected by the IR sensors
+   --  @value Lost no line found. Start panicking
+   --  @value Online one line is found somewhere under the middle set of
+   --    sensors
+   --  @value BranchRight we found a branch going to the right of the robot
+   --  @value BranchLeft we found a branch going to the left of the robot
+   --  @value Fork we found a fork in the line. Pick it up!
+   --  @value Perp we came to a perpendicular intersection.
+   --  @value Unknown this is a state where we have lots of noise. Ignore
    type LineState is
      (Lost, Online, BranchRight, BranchLeft, Fork, Perp, Unknown)
      with Size => 8;
 
+   --  The orientation of the robot in relation to the line
+   --  @value Left the line is under the left side of the robot
+   --  @value Center the line is under the center of the robot
+   --  @value Right the line is under the right side of the robot
    type BotOrientation is
      (Left, Center, Right);
 
+   --  When we can't find the line we should do larger circles to refind it.
+   --    This is the type that we can use to tell the motors how to circle
    subtype OfflineCounterType is Integer range
      2 * Motor_Speed'First .. 2 * Motor_Speed'Last;
 
+   --  We can make decisions based on a simple scheme or complex
+   --  @value Simple simple decision matrix. Best when we are Lost
+   --  @value Complex complex decision matrix. Best when we know whats going on
    type DecisionType is
      (Simple, Complex);
 
+   --  The data structure holding information about the robot and its current
+   --    situation
+   --  @field LineHistory the last computer state
+   --  @field OrientationHistory the last computed BotOrientation
+   --  @field SensorValueHistory the last sensor value detected
+   --  @field ErrorHistory the last computed error from the robot centered
+   --  @field OfflineCounter How the motors should circle when lost
+   --  @field LostCounter How long its been since we saw the line
+   --  @field Decision type of decisions matrix to use
+   --  @field LineDetect the value computed from the value we read from the
+   --    sensors
+   --  @field Sensor_Values the actual values we read from the sensors
    type RobotState is record
       LineHistory        : LineState := Online;
       OrientationHistory : BotOrientation := Center;
@@ -35,6 +68,7 @@ package Line_Finder_Types is
       Sensor_Values      : Sensor_Array := (others => 0);
    end record;
 
+   --  FOR DEBUG! Maps states to strings
    LineStateStr : array (LineState) of String (1 .. 2) :=
                     (Lost        => "Lo",
                      Online      => "On",
@@ -44,6 +78,8 @@ package Line_Finder_Types is
                      Perp        => "Pe",
                      Unknown     => "Uk");
 
+   --  This is the lookup table we use to convert SensorValues to detected
+   --    states.
    LineStateLookup : constant array (0 .. 2 ** Num_Sensors - 1) of LineState :=
                        (2#00_000_000# => Lost,
                         2#00_000_001# => Online,

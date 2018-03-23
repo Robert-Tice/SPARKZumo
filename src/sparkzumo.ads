@@ -17,13 +17,26 @@ with Wire;
 
 with Line_Finder;
 
+--  @summary
+--  The main entry point to the application
+--
+--  @description
+--  This is the main entry point to the application. The Setup and Workloop
+--    functions are called from the Arduino sketch
+--
 package SPARKZumo is
 
+   --  True if we have called all necessary inits
    Initd    : Boolean := False;
+
+   --  The mode to use to read the IR sensors
    ReadMode : constant Sensor_Read_Mode := Emitters_On;
 
+   --  A quick utility test to work with the RISC board
    procedure RISC_Test;
 
+   --  The main workloop of the application. This is called from the loop
+   --    function of the Arduino sketch
    procedure WorkLoop
      with Global => (Input => (Initd,
                                Zumo_LED.Initd,
@@ -45,6 +58,8 @@ package SPARKZumo is
                  Zumo_Motors.Initd and
                    Zumo_QTR.Initd);
 
+   --  This setup procedure is called from the setup function in the Arduino
+   --    sketch
    procedure Setup
      with Pre => (not Initd and
                     not Zumo_LED.Initd and
@@ -61,6 +76,9 @@ package SPARKZumo is
 
 private
 
+   --  The actual calibration sequence to run. This called calibration many
+   --    times while moving the robot around. The robot should be place around
+   --    a line so that it can calibrate on what is a line and what isnt.
    procedure Calibration_Sequence
      with Global => (Input => (Initd,
                                Zumo_Motors.Initd,
@@ -75,6 +93,7 @@ private
                 Zumo_Motors.Initd and
                   Zumo_QTR.Initd);
 
+   --  This handles init'ing everything that needs to be init'd in the app
    procedure Inits
      with Global => (Input  => (Wire.Transmission_Status),
                      --                    Output => (Pwm.Register_State),
@@ -99,6 +118,8 @@ private
                       Zumo_QTR.Initd and
                         Zumo_Motion.Initd);
 
+   --  This is the exception handler that ends in a infinite loop. This is
+   --    called from the Ardunio sketch when an exception is thrown.
    procedure Exception_Handler
      with Pre => (Zumo_LED.Initd and Zumo_Motors.Initd);
 
