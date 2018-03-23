@@ -43,5 +43,9 @@ library project Zumo is
       for Switches use ("-v");
    end Prove;
 
+   package Documentation is
+      for Documentation_Dir use "docs";
+   end Documentation;
+
 end Zumo;
 

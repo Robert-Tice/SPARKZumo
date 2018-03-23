@@ -73,7 +73,7 @@ class ArduinoWorkflow:
 
     # This contains the list of registered workflows and associated action descriptions.
     #    this is initilized from the __init__
-    __workflow_registry = []     
+    __workflow_registry = []  
 
     def __get_conf_paths(self):
         """
@@ -95,7 +95,6 @@ class ArduinoWorkflow:
                 self.__error_exit("Could not find %s in directory %s" % (value['filename'], self.__consts['conf_dir']))
                 return False 
         return True
-
 
     def __read_flashfile(self):
         """
@@ -223,8 +222,7 @@ class ArduinoWorkflow:
                 dep_list.add(cfile)
             if os.path.isfile(hfile):
                 dep_list.add(hfile)
-        self.__rtl_dep_list = list(dep_list)
-
+        self.__rtl_dep_list = list(dep_list)        
 
     def __post_ccg(self, obj_dir, clean=True):
         """
@@ -388,7 +386,7 @@ class ArduinoWorkflow:
 
         return True
         
-    def __do_ccg_wf(self, task, start_task_num=1, end_task_num=3):
+    def __do_ccg_wf(self, task, start_task_num=1, end_task_num=4):
         #####################################
         ## Task - Generate geolookup table ##
         #####################################
@@ -426,8 +424,18 @@ class ArduinoWorkflow:
         if retval is not 0:
             self.__error_exit("Failed to post-process CCG output.")
             return
-
         task.set_progress(start_task_num + 2, end_task_num)
+
+        ########################################
+        ## Task - build project documentation ##
+        ########################################
+        self.__console_msg("Building project documentation.")
+        gnatdoc = promises.TargetWrapper("gnatdoc")
+        retval = yield gnatdoc.wait_on_execute(extra_args=["-P", GPS.Project.root().file().path, "-l"])
+        if retval is not 0:
+            self.__error_exit("Failed to generate project documentation.")
+            return
+        task.set_progress(start_task_num + 3, end_task_num)
 
 
     def __do_arduino_build_wf(self, task, start_task_num=1, end_task_num=2):
