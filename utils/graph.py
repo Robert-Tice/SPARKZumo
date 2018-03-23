@@ -40,37 +40,37 @@ class graph:
         self.__yMin = -1 * cornerCoord
         self.__yMax = cornerCoord
 
-        self.y_diff = cornerCoord - int(cornerCoord / (2 * math.sqrt(3)))
+        self.__y_diff = cornerCoord - int(cornerCoord / (2 * math.sqrt(3)))
 
         self.radii = int(cornerCoord / 3 * math.sqrt(2))
 
         self.__shapes["Online"].update({
-                "polygon": Polygon([(self.__xMax, self.__yMax), (0, self.__yMax), (0, 0), (self.__xMax, self.y_diff)]),
+                "polygon": Polygon([(self.__xMax, self.__yMax), (0, self.__yMax), (0, 0), (self.__xMax, self.__y_diff)]),
                 "point": Point(self.__xMax, self.__yMax),
                 "txtpos": Point(self.__xMax - 4.5, self.__yMax + 0.5)
             })
         self.__shapes["BranchLeft"].update({
-                "polygon": Polygon([(self.__xMin, self.y_diff), (0, 0), (0, self.__yMax), (self.__xMin, self.__yMax)]),
+                "polygon": Polygon([(self.__xMin, self.__y_diff), (0, 0), (0, self.__yMax), (self.__xMin, self.__yMax)]),
                 "point": Point(self.__xMin, self.__yMax),
                 "txtpos": Point(self.__xMin + 1, self.__yMax + 0.5)
             })
         self.__shapes["Perp"].update({
-                "polygon": Polygon([(self.__xMin, -1 * self.y_diff), (0, 0), (self.__xMin, self.y_diff)]),
+                "polygon": Polygon([(self.__xMin, -1 * self.__y_diff), (0, 0), (self.__xMin, self.__y_diff)]),
                 "point": Point(self.__xMin, 0),
                 "txtpos": Point(self.__xMin + 1, 0)
             })
         self.__shapes["Lost"].update({
-                "polygon": Polygon([(0, self.__yMin), (0, 0), (self.__xMin, -1 * self.y_diff), (self.__xMin, self.__yMin)]),
+                "polygon": Polygon([(0, self.__yMin), (0, 0), (self.__xMin, -1 * self.__y_diff), (self.__xMin, self.__yMin)]),
                 "point": Point(self.__xMin, self.__yMin),
                 "txtpos": Point(self.__xMin + 1, self.__yMin - 1.5)
             })
         self.__shapes["Fork"].update({
-                "polygon": Polygon([(self.__xMax, -1 * self.y_diff), (0, 0), (0, self.__yMin), (self.__xMax, self.__yMin)]),
+                "polygon": Polygon([(self.__xMax, -1 * self.__y_diff), (0, 0), (0, self.__yMin), (self.__xMax, self.__yMin)]),
                 "point": Point(self.__xMax, self.__yMin),
                 "txtpos": Point(self.__xMax - 3, self.__yMin - 1.5)
             })
         self.__shapes["BranchRight"].update({
-                "polygon": Polygon([(self.__xMax, self.y_diff), (0, 0), (self.__xMax, -1 * self.y_diff)]),
+                "polygon": Polygon([(self.__xMax, self.__y_diff), (0, 0), (self.__xMax, -1 * self.__y_diff)]),
                 "point": Point(self.__xMax, 0),
                 "txtpos": Point(self.__xMax + 1, 0)
             })

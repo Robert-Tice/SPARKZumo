@@ -357,35 +357,6 @@ class ArduinoWorkflow:
         fixed_array_str = textwrap.fill(array_str, width=78, initial_indent=' ' * 28, subsequent_indent=' ' * 29)
         buf.insert(agg_start_cursor, fixed_array_str[agg_start_col - 1:])
 
-        ################################
-        ##  Update corner coord magic ##
-        ################################
-
-        unit = update_lalctx(f)
-        if unit.root is None:
-            self.__error_exit("Could not parse %s." % f)
-            for diag in unit.diagnostics:
-                self.__error_exit('   {}'.format(diag))
-            return False
-
-        ydiff_node = unit.root.findall(lambda n: n.is_a(lal.NumberDecl) and n.f_ids.text=='Y_Diff')
-        if len(ydiff_node) != 1:
-            self.__error_exit("Error parsing file for Y_Diff")
-            return False
-
-        ydiff_start_line = int(ydiff_node[0].f_expr.sloc_range.start.line)
-        ydiff_start_col = int(ydiff_node[0].f_expr.sloc_range.start.column)
-
-        ydiff_end_line = int(ydiff_node[0].f_expr.sloc_range.end.line)
-        ydiff_end_col = int(ydiff_node[0].f_expr.sloc_range.end.column)
-
-        ydiff_start_cursor = buf.at(ydiff_start_line, ydiff_start_col)
-        ydiff_end_cursor = buf.at(ydiff_end_line, ydiff_end_col)
-
-        buf.delete(ydiff_start_cursor, ydiff_end_cursor)
-        new_ydiff = str(grph.y_diff) + ";"
-        buf.insert(ydiff_start_cursor, new_ydiff)
-
         #############################
         ##  Update radii threshold ##
         #############################
