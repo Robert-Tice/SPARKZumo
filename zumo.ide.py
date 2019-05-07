@@ -1,7 +1,6 @@
 from copy import deepcopy
 import glob
 import os
-import pip
 import re
 import shutil
 import stat
@@ -14,6 +13,11 @@ import workflows.promises as promises
 from workflows import task_workflow
 
 import libadalang as lal
+
+try:
+    from pip import main as pipmain
+except:
+    from pip._internal import main as pipmain
 
 def del_rw(action, name, exc):
     os.chmod(name, stat.S_IWRITE)
@@ -73,7 +77,7 @@ class ArduinoWorkflow:
 
     # This contains the list of registered workflows and associated action descriptions.
     #    this is initilized from the __init__
-    __workflow_registry = []  
+    __workflow_registry = []
 
     def __get_conf_paths(self):
         """
@@ -93,14 +97,14 @@ class ArduinoWorkflow:
                 self.__conf_files[key]['path'] = os.path.join(self.__consts['conf_dir'], value['filename'])
             else:
                 self.__error_exit("Could not find %s in directory %s" % (value['filename'], self.__consts['conf_dir']))
-                return False 
+                return False
         return True
 
     def __read_flashfile(self):
         """
         Reads data from the flash.yaml file
 
-        The information in flash.yaml describes the hardware and 
+        The information in flash.yaml describes the hardware and
         communication port to the avrdude executable
 
         :return: The python dictionary representation of the yaml file
@@ -139,7 +143,7 @@ class ArduinoWorkflow:
 
         :param sketch: this is the filename of the arduino sketch found in the project
 
-        :return: The list that corresponds to the flash command 
+        :return: The list that corresponds to the flash command
         """
         ret = []
 
@@ -166,7 +170,7 @@ class ArduinoWorkflow:
                 self.__consts['conf_dir'],
                 "-f",
                 self.__conf_files['openocdconf']['path'],
-                "-c",        
+                "-c",
                 '''flash protect 0 64 last off''',
                 "-c",
                 '''program %s verify''' % os.path.join(self.__consts['build_path'], sketch + ".elf"),
@@ -222,7 +226,7 @@ class ArduinoWorkflow:
                 dep_list.add(cfile)
             if os.path.isfile(hfile):
                 dep_list.add(hfile)
-        self.__rtl_dep_list = list(dep_list)        
+        self.__rtl_dep_list = list(dep_list)
 
     def __post_ccg(self, obj_dir, clean=True):
         """
@@ -236,8 +240,8 @@ class ArduinoWorkflow:
         :param clean: this tells the function to clean artifacts from the previous build.
                     The ccg_lib and build_path directories are cleaned.
 
-                    Build_path should be cleaned because of a weird Arduino quirk where 
-                    iteractive builds are nested. So if you keep building you WILL run into 
+                    Build_path should be cleaned because of a weird Arduino quirk where
+                    iteractive builds are nested. So if you keep building you WILL run into
                     the max path character limit problem on Windows.
 
         """
@@ -289,7 +293,7 @@ class ArduinoWorkflow:
         totaltasks = 0
         for value in self.__workflow_registry:
             if value['all-flag']:
-                totaltasks += value['tasks']  
+                totaltasks += value['tasks']
 
         self.__console_msg("Task total: %d" % totaltasks)
 
@@ -317,7 +321,7 @@ class ArduinoWorkflow:
         ######################################
         ##  Search and replace lookup table ##
         ######################################
-        
+
         unit = update_lalctx(f)
         if unit.root is None:
             self.__error_exit("Could not parse %s." % f)
@@ -385,7 +389,7 @@ class ArduinoWorkflow:
         buf.insert(radii_start_cursor, new_radii)
 
         return True
-        
+
     def __do_ccg_wf(self, task, start_task_num=1, end_task_num=4):
         #####################################
         ## Task - Generate geolookup table ##
@@ -404,7 +408,7 @@ class ArduinoWorkflow:
                 shutil.rmtree(os.path.join(self.__consts['ccg_lib'], "src", file), onerror=del_rw)
             else:
                 os.remove(os.path.join(self.__consts['ccg_lib'], "src", file))
-        
+
 
         self.__console_msg("Generating C code.")
         builder = promises.TargetWrapper("Build All")
@@ -414,7 +418,7 @@ class ArduinoWorkflow:
             self.__error_exit("Failed to generate C code.")
             return
 
-        obj_dir = GPS.Project.root().object_dirs()  
+        obj_dir = GPS.Project.root().object_dirs()
 
         ##############################
         ## Task   - post processing ##
@@ -445,8 +449,8 @@ class ArduinoWorkflow:
 
         sketch = self.__pre_arduino_build()
 
-        task.set_progress(start_task_num, end_task_num) 
-    
+        task.set_progress(start_task_num, end_task_num)
+
         ####################################
         ## Task   - Build Arduino Project ##
         ####################################
@@ -482,7 +486,7 @@ class ArduinoWorkflow:
             return
         flash_options = self.__read_flashfile()
 
-        task.set_progress(start_task_num, end_task_num) 
+        task.set_progress(start_task_num, end_task_num)
 
         ###################################
         ## Task - Flash image to board ##
@@ -503,11 +507,11 @@ class ArduinoWorkflow:
 
         self.__console_msg("Flashing complete.")
 
-        task.set_progress(start_task_num + 1, end_task_num) 
+        task.set_progress(start_task_num + 1, end_task_num)
 
 
     def __install_plugin_deps(self):
-        ret = pip.main(["install"] + self.__plugin_deps)
+        ret = pipmain(["install"] + self.__plugin_deps)
 
         if ret is not 0:
             self.__error_exit("Unable to install plugin dependencies.")
