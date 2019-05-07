@@ -24,8 +24,8 @@ package Sparkduino is
 
    --  Write a HIGH or a LOW value to a digital pin.
    --  @param Pin the pin number
-   --  @param use DigPinValue'Pos (state) where state is of type DigPinValue
-   --    see Types package for more info
+   --  @param Val use DigPinValue'Pos (state) where state is of type
+   --    DigPinValue see Types package for more info
    procedure DigitalWrite (Pin : Pin_Type;
                            Val : unsigned)
      with Global => null;
@@ -40,7 +40,7 @@ package Sparkduino is
 
    --  Writes an analog value to a pin
    --  @param Pin the pin to write to
-   --  @param the duty cycle: between 0 (always off) and 255 (always on)
+   --  @param Val the duty cycle: between 0 (always off) and 255 (always on)
    procedure AnalogWrite (Pin : Pin_Type;
                           Val : unsigned)
      with Global => null;
@@ -60,7 +60,7 @@ package Sparkduino is
    --    the current program. This number will overflow (go back to zero),
    --    after approximately 50 days.
    --  @return Number of milliseconds since the program started (unsigned long)
-   function Millis return Unsigned_long
+   function Millis return unsigned_long
      with Global => null;
    pragma Import (C, Millis, "millis");
 
@@ -71,8 +71,8 @@ package Sparkduino is
    --    four microseconds (i.e. the value returned is always a multiple of
    --    four). On 8 MHz Arduino boards (e.g. the LilyPad), this function has
    --    a resolution of eight microseconds.
-   --  @return Returns the number of microseconds since the Arduino board began running
-   --    the current program. (unsigned long)
+   --  @return Returns the number of microseconds since the Arduino board began
+   --    running the current program. (unsigned long)
    function Micros return unsigned_long
      with Global => null;
    pragma Import (C, Micros, "micros");

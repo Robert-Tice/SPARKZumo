@@ -75,20 +75,20 @@ package body SPARKZumo is
       Zumo_Pushbutton.WaitForButton;
       Zumo_LED.Yellow_Led (On => False);
 
-      --      Calibration_Sequence;
-      RISC_Test;
+      Calibration_Sequence;
+--      RISC_Test;
 
       Zumo_LED.Yellow_Led (On => True);
       Zumo_Pushbutton.WaitForButton;
 
-      for I in Zumo_QTR.Cal_Vals_On'Range loop
-         Serial_Print_Calibration (Index => I,
-                                   Min   => Zumo_QTR.Cal_Vals_On (I).Min,
-                                   Max   => Zumo_QTR.Cal_Vals_On (I).Max);
-      end loop;
-
-      SysDelay (1000);
-      Zumo_Pushbutton.WaitForButton;
+--        for I in Zumo_QTR.Cal_Vals_On'Range loop
+--           Serial_Print_Calibration (Index => I,
+--                                     Min   => Zumo_QTR.Cal_Vals_On (I).Min,
+--                                     Max   => Zumo_QTR.Cal_Vals_On (I).Max);
+--        end loop;
+--
+--        SysDelay (1000);
+--        Zumo_Pushbutton.WaitForButton;
    end Setup;
 
    procedure WorkLoop

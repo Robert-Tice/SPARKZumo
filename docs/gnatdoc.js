@@ -187,12 +187,35 @@ function buildText(root, data) {
 
            case GNATdoc.EntityKind.HTML:
                element = document.createElement('span');
-               element.innerHtml = data[index].html;
+               element.innerHTML = data[index].html;
 
                break;
        }
        root.appendChild(element);
    }
+}
+
+/**
+ * ???
+ */
+
+function buildInstantiationInformation(pane, entity) {
+    //  Display instantiation information
+
+    if (entity.instantiation !== undefined) {
+        var paragraph = document.createElement('p');
+        paragraph.appendChild(
+          document.createTextNode('Instantiation of '));
+
+        var href = document.createElement('a');
+        href.href = '../' + entity.instantiation.docHref;
+        href.target = 'contentView';
+        href.appendChild(
+          document.createTextNode(entity.instantiation.label));
+        paragraph.appendChild(href);
+
+        pane.appendChild(paragraph);
+    }
 }
 
 /**
@@ -283,6 +306,25 @@ function buildDocumentationPage() {
     pane.appendChild(header);
     buildText(pane, GNATdoc.Documentation.description);
 
+    //  Display renaming information
+
+    if (GNATdoc.Documentation.renaming !== undefined) {
+        var paragraph = document.createElement('p');
+        paragraph.appendChild(
+          document.createTextNode('Renaming of '));
+
+        href = document.createElement('a');
+        href.href = '../' + GNATdoc.Documentation.renaming.docHref;
+        href.target = 'contentView';
+        href.appendChild(
+          document.createTextNode(GNATdoc.Documentation.renaming.label));
+        paragraph.appendChild(href);
+
+        pane.appendChild(paragraph);
+    }
+
+    buildInstantiationInformation(pane, GNATdoc.Documentation);
+
     /* Build entities description sections */
 
     for (var index = 0; index < GNATdoc.Documentation.entities.length; index++)
@@ -372,8 +414,34 @@ function buildDocumentationPage() {
                     pane.appendChild(paragraph);
                 }
 
-                if (entity.parameters !== undefined) {
+                //  Display instantiation information
+
+                buildInstantiationInformation(pane, entity);
+
+                if (entity.generic_parameters !== undefined) {
                     list = document.createElement('dl');
+
+                    for (var pindex = 0;
+                         pindex < entity.generic_parameters.length;
+                         pindex++)
+                    {
+                        var parameter = entity.generic_parameters[pindex];
+                        var term = document.createElement('dt');
+                        term.id = 'L' + parameter.line.toString() +
+                            'C' + parameter.column.toString();
+                        term.appendChild(
+                          document.createTextNode(parameter.label));
+
+                        var description = document.createElement('dd');
+                        buildText(description, parameter.description);
+
+                        list.appendChild(term);
+                        list.appendChild(description);
+                    }
+                }
+
+                if (entity.parameters !== undefined) {
+                    list = list || document.createElement('dl');
 
                     for (var pindex = 0;
                          pindex < entity.parameters.length;
