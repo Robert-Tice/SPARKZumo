@@ -1,7 +1,8 @@
---  pragma SPARK_Mode;
+pragma SPARK_Mode;
 
 with Ada.Numerics.Long_Elementary_Functions;
 use Ada.Numerics.Long_Elementary_Functions;
+with Wire;
 
 package body Zumo_Motion is
 

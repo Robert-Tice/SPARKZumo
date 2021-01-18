@@ -41,16 +41,16 @@ package Zumo_Motors is
    --  Set the speed of the left motor
    --  @param Velocity the speed to set the motor at
    procedure SetLeftSpeed (Velocity : Motor_Speed)
-     with Global => (Input  => (Initd,
-                                FlipLeft)),
+     with Global => (Proof_In => Initd,
+                     Input    => FlipLeft),
                      --                    Output => (Pwm.Register_State)),
      Pre => Initd;
 
    --  Set the speed of the right motor
    --  @param Velocity the speed to set the motor at
    procedure SetRightSpeed (Velocity : Motor_Speed)
-     with Global => (Input => (Initd,
-                               FlipRight)),
+     with Global => (Proof_In => Initd,
+                     Input    => FlipRight),
    --                    Output => (Pwm.Register_State)),
      Pre => Initd;
 
@@ -59,8 +59,8 @@ package Zumo_Motors is
    --  @param RightVelocity the right motor velocity to set
    procedure SetSpeed (LeftVelocity  : Motor_Speed;
                        RightVelocity : Motor_Speed)
-     with Global => (Input => (Initd,
-                               FlipLeft,
+     with Global => (Proof_In => Initd,
+                     Input => (FlipLeft,
                                FlipRight)),
    --                 Output => (Pwm.Register_State)),
      Pre => Initd;

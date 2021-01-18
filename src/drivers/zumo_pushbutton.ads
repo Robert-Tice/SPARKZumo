@@ -23,18 +23,18 @@ package Zumo_Pushbutton is
    --    Returns when the button is pressed and released
    procedure WaitForButton
      with Pre => Initd,
-     Global => Initd;
+     Global => (Proof_In => Initd);
 
 private
 
    --  Waits for the button to be pressed
    procedure WaitForPress
      with Pre => Initd,
-     Global => Initd;
+     Global => (Proof_In => Initd);
 
    --  Waits for the button to be released
    procedure WaitForRelease
      with Pre => Initd,
-     Global => Initd;
+     Global => (Proof_In => Initd);
 
 end Zumo_Pushbutton;

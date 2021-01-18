@@ -91,29 +91,25 @@ package Sparkduino is
 
    --  Print a string to the serial console
    --  @param Msg the string to print
-   procedure Serial_Print (Msg : String)
-     with SPARK_Mode => Off;
+   procedure Serial_Print (Msg : String);
 
    --  Print a byte to the serial console
    --  @param Msg the string to prepend
    --  @param Val the byte to print
    procedure Serial_Print_Byte (Msg : String;
-                                Val : Byte)
-     with SPARK_Mode => Off;
+                                Val : Byte);
 
    --  Print a short to the serial console
    --  @param Msg the string to prepend
    --  @param Val the short to print
    procedure Serial_Print_Short (Msg : String;
-                                 Val : short)
-     with SPARK_Mode => Off;
+                                 Val : short);
 
    --  Print a float to the serial console
    --  @param Msg the string to prepend
    --  @param Val the float to print
    procedure Serial_Print_Float (Msg : String;
-                                 Val : Float)
-     with SPARK_Mode => Off;
+                                 Val : Float);
 
    --  Print the format calibration data to the serial console
    --  @param Index the specific sensor calibration data to print

@@ -39,17 +39,16 @@ package Line_Finder is
    --  The line finder algorithm entry point
    --  @param ReadMode the read mode to pass to read sensors
    procedure LineFinder (ReadMode : Sensor_Read_Mode)
-     with Global => (Input => (Zumo_LED.Initd,
-                               Zumo_Motors.Initd,
-                               Zumo_Motors.FlipLeft,
+     with Global => (Proof_In => (Zumo_QTR.Initd,
+                                  Zumo_LED.Initd,
+                                  Zumo_Motors.Initd),
+                     Input => (Zumo_Motors.FlipLeft,
                                Zumo_Motors.FlipRight,
-                               Zumo_QTR.Initd,
                                Zumo_QTR.Calibrated_On,
                                Zumo_QTR.Calibrated_Off),
-
-                     In_Out => (Fast_Speed,
-                                Slow_Speed,
-                                BotState,
+                     Output => (Fast_Speed,
+                                Slow_Speed),
+                     In_Out => (BotState,
                                 Zumo_QTR.Cal_Vals_On,
                                 Zumo_QTR.Cal_Vals_Off,
                                 Geo_Filter.Window,
@@ -67,8 +66,8 @@ private
    procedure ReadLine (WhiteLine      : Boolean;
                        ReadMode       : Sensor_Read_Mode;
                        State      : out LineState)
-     with Global => (Input  => (Zumo_QTR.Initd,
-                                Zumo_QTR.Calibrated_On,
+     with Global => (Proof_In => Zumo_QTR.Initd,
+                     Input  => (Zumo_QTR.Calibrated_On,
                                 Zumo_QTR.Calibrated_Off),
                      In_Out => (BotState,
                                 Zumo_QTR.Cal_Vals_On,
@@ -82,13 +81,13 @@ private
    --  The complex decision matrix to decide the meaning of life
    --  @param State the state computed previously to use in the decision
    procedure DecisionMatrix (State     : LineState)
-     with Global => (Input  => (Zumo_LED.Initd,
-                                Zumo_Motors.Initd,
+     with Global => (Proof_In => (Zumo_LED.Initd,
+                                  Zumo_Motors.Initd),
+                     Input  => (Fast_Speed,
+                                Slow_Speed,
                                 Zumo_Motors.FlipLeft,
                                 Zumo_Motors.FlipRight),
-                     In_Out => (BotState,
-                                Fast_Speed,
-                                Slow_Speed)),
+                     In_Out => BotState),
      Pre => (Zumo_LED.Initd and
                Zumo_Motors.Initd);
 
@@ -96,12 +95,12 @@ private
    --    See complex decision matrix for normal operation
    --  @param State the state computed previously to use in the decision
    procedure SimpleDecisionMatrix (State : LineState)
-     with Global => (Input => (Zumo_LED.Initd,
-                               Zumo_Motors.Initd,
+     with Global => (Proof_In => (Zumo_LED.Initd,
+                                  Zumo_Motors.Initd),
+                     Input => (Fast_Speed,
                                Zumo_Motors.FlipLeft,
                                Zumo_Motors.FlipRight),
-                     In_Out => (BotState,
-                                Fast_Speed)),
+                     In_Out => BotState),
      Pre => (Zumo_LED.Initd and
                Zumo_Motors.Initd);
 

@@ -1,18 +1,16 @@
---  pragma SPARK_Mode;
+pragma SPARK_Mode;
 
 with Types; use Types;
 
 with Zumo_LSM303;
 with Zumo_L3gd20h;
-with Wire;
 
 package Zumo_Motion is
 
    Initd : Boolean := False;
 
    procedure Init
-     with Global => (Input  => (Wire.Transmission_Status),
-                     Output => (Initd,
+     with Global => (In_Out => (Initd,
                                 Zumo_LSM303.Initd,
                                 Zumo_L3gd20h.Initd)),
      Pre => not Initd,

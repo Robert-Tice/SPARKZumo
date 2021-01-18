@@ -38,11 +38,11 @@ package SPARKZumo is
    --  The main workloop of the application. This is called from the loop
    --    function of the Arduino sketch
    procedure WorkLoop
-     with Global => (Input => (Initd,
-                               Zumo_LED.Initd,
-                               Zumo_Motors.Initd,
-                               Zumo_QTR.Initd,
-                               Zumo_Motors.FlipLeft,
+     with Global => (Proof_In => (Initd,
+                                  Zumo_LED.Initd,
+                                  Zumo_Motors.Initd,
+                                  Zumo_QTR.Initd),
+                     Input => (Zumo_Motors.FlipLeft,
                                Zumo_Motors.FlipRight,
                                Zumo_QTR.Calibrated_On,
                                Zumo_QTR.Calibrated_Off),
@@ -80,11 +80,11 @@ private
    --    times while moving the robot around. The robot should be place around
    --    a line so that it can calibrate on what is a line and what isnt.
    procedure Calibration_Sequence
-     with Global => (Input => (Initd,
-                               Zumo_Motors.Initd,
-                               Zumo_Motors.FlipLeft,
-                               Zumo_Motors.FlipRight,
-                               Zumo_QTR.Initd),
+     with Global => (Proof_In => (Initd,
+                                  Zumo_Motors.Initd,
+                                  Zumo_QTR.Initd),
+                     Input => (Zumo_Motors.FlipLeft,
+                               Zumo_Motors.FlipRight),
                      Output => (Zumo_QTR.Calibrated_On,
                                 Zumo_QTR.Calibrated_Off),
                      In_Out => (Zumo_QTR.Cal_Vals_On,
