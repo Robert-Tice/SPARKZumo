@@ -57,7 +57,7 @@ package Zumo_QTR is
    --  Performs a calibration routine with the sensors
    --  @param ReadMode emitters on or off during calibration
    procedure Calibrate (ReadMode : Sensor_Read_Mode := Emitters_On)
-     with Global => (Input  => Initd,
+     with Global => (Proof_In => Initd,
                      In_Out => (Cal_Vals_On,
                                 Cal_Vals_Off),
                      Output => (Calibrated_On,
@@ -87,7 +87,7 @@ private
    --  @param ReadMode calibrate with emitters on or off
    procedure Calibrate_Private (Cal_Vals : in out Calibration_Array;
                                 ReadMode : Sensor_Read_Mode)
-     with Global => Initd,
+     with Global => (Proof_In => Initd),
      Pre => Initd;
 
 end Zumo_QTR;

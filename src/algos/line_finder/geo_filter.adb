@@ -1,19 +1,21 @@
+pragma SPARK_Mode;
+
 package body Geo_Filter is
 
-   procedure FilterState (State : in out LineState;
-                         Thresh : out Boolean)
+   procedure FilterState (State  : in out LineState;
+                          Thresh : out Boolean)
    is
       Current_Point : constant Point_Type := State2PointLookup (State);
 
-      X_Sum, X_Avg  : Integer := 0;
-      Y_Sum, Y_Avg  : Integer := 0;
+      X_Sum, Y_Sum  : Integer := 0;
+      X_Avg, Y_Avg  : Integer;
    begin
 
       case State is
          when Unknown =>
             Thresh := True;
-         when others =>
 
+         when others =>
             Window (Window_Index) := Current_Point;
 
             if Window_Index = Window_Type'Last then

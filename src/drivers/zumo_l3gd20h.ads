@@ -19,7 +19,8 @@ package Zumo_L3gd20h is
 
    --  Inits the package. Pin muxing and whatnot.
    procedure Init
-     with Pre => not Initd,
+     with Global => (In_Out => Initd),
+     Pre => not Initd,
      Post => Initd;
 
    --  Read the temperature of the sensor
@@ -95,33 +96,33 @@ private
       LOW_ODR);
 
    --  Mapping of register enums to actual register addresses
-   Regs : array (Reg_Index) of Byte := (WHO_AM_I    => 16#0F#,
-                                        CTRL1       => 16#20#,
-                                        CTRL2       => 16#21#,
-                                        CTRL3       => 16#22#,
-                                        CTRL4       => 16#23#,
-                                        CTRL5       => 16#24#,
-                                        REFERENCE   => 16#25#,
-                                        OUT_TEMP    => 16#26#,
-                                        STATUS      => 16#27#,
-                                        OUT_X_L     => 16#28#,
-                                        OUT_X_H     => 16#29#,
-                                        OUT_Y_L     => 16#2A#,
-                                        OUT_Y_H     => 16#2B#,
-                                        OUT_Z_L     => 16#2C#,
-                                        OUT_Z_H     => 16#2D#,
-                                        FIFO_CTRL   => 16#2E#,
-                                        FIFO_SRC    => 16#2F#,
-                                        IG_CFG      => 16#30#,
-                                        IG_SRC      => 16#31#,
-                                        IG_THS_XH   => 16#32#,
-                                        IG_THS_XL   => 16#33#,
-                                        IG_THS_YH   => 16#34#,
-                                        IG_THS_YL   => 16#35#,
-                                        IG_THS_ZH   => 16#36#,
-                                        IG_THS_ZL   => 16#37#,
-                                        IG_DURATION => 16#38#,
-                                        LOW_ODR     => 16#39#);
+   Regs : constant array (Reg_Index) of Byte := (WHO_AM_I    => 16#0F#,
+                                                 CTRL1       => 16#20#,
+                                                 CTRL2       => 16#21#,
+                                                 CTRL3       => 16#22#,
+                                                 CTRL4       => 16#23#,
+                                                 CTRL5       => 16#24#,
+                                                 REFERENCE   => 16#25#,
+                                                 OUT_TEMP    => 16#26#,
+                                                 STATUS      => 16#27#,
+                                                 OUT_X_L     => 16#28#,
+                                                 OUT_X_H     => 16#29#,
+                                                 OUT_Y_L     => 16#2A#,
+                                                 OUT_Y_H     => 16#2B#,
+                                                 OUT_Z_L     => 16#2C#,
+                                                 OUT_Z_H     => 16#2D#,
+                                                 FIFO_CTRL   => 16#2E#,
+                                                 FIFO_SRC    => 16#2F#,
+                                                 IG_CFG      => 16#30#,
+                                                 IG_SRC      => 16#31#,
+                                                 IG_THS_XH   => 16#32#,
+                                                 IG_THS_XL   => 16#33#,
+                                                 IG_THS_YH   => 16#34#,
+                                                 IG_THS_YL   => 16#35#,
+                                                 IG_THS_ZH   => 16#36#,
+                                                 IG_THS_ZL   => 16#37#,
+                                                 IG_DURATION => 16#38#,
+                                                 LOW_ODR     => 16#39#);
 
    type Register_Bytes is record
       Register : Reg_Index;
