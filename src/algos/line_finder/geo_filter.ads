@@ -57,7 +57,7 @@ package Geo_Filter is
    type Window_Type is array (1 .. Window_Size) of Point_Type;
 
    Window       : Window_Type := (others => State2PointLookup (Online));
-   Window_Index : Integer := Window_Type'First;
+   Window_Index : Integer range 1 .. Window_Size := Window_Type'First;
 
    --  This performs the filtering
    --  @param State pass the detected state here and received the computed
@@ -68,7 +68,7 @@ package Geo_Filter is
                           Thresh : out Boolean)
      with Global => (In_Out => (Window,
                                 Window_Index)),
-     Post => (Window_Index in Window_Type'Range and
+     Post => (if State'Old /= Unknown then
                 Window_Index /= Window_Index'Old);
 private
 
